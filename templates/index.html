@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fileonix | Universal File Converter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fa-solid fa-bolt" style="color: #ef4444; margin-right: 8px;"></i>
+            <span>FILEONIX</span>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Fileonix Converter</h1>
+                <p>Fast, secure, and intuitive file conversion. Support for PNG, JPG, WEBP, and more.</p>
+            </div>
+            <div class="robot-container" id="robot-mascot">
+                <div class="speech-bubble" id="joke-bubble">Hey there!</div>
+                <div class="orb-mascot">
+                    <div class="orb-core"></div>
+                    <div class="orb-ring ring-1"></div>
+                    <div class="orb-ring ring-2"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <!-- Dropzone -->
+        <div class="dropzone" id="dropzone">
+            <div class="dropzone-content">
+                <button class="btn-primary" id="main-select-btn">Select File</button>
+                <p>or drop files here</p>
+            </div>
+        </div>
+
+        <input type="file" id="file-input" multiple hidden accept="image/*">
+
+        <!-- File List Area -->
+        <div class="file-list-container" id="file-list-container" hidden>
+            <div class="file-list" id="file-list"></div>
+
+            <div class="action-bar">
+                <div id="ready-count" style="font-weight: 600; color: var(--text-muted);">0 files ready</div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <div class="global-format" style="display: flex; align-items: center; gap: 8px; background: #262626; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">CONVERT ALL TO</span>
+                        <select id="global-format-select" style="background: transparent; border: none; color: white; font-weight: 800; cursor: pointer; outline: none;">
+                            <option value="WEBP">WEBP</option>
+                            <option value="PNG">PNG</option>
+                            <option value="JPEG">JPG</option>
+                            <option value="GIF">GIF</option>
+                            <option value="BMP">BMP</option>
+                        </select>
+                    </div>
+                    <button class="btn-secondary" id="add-more-btn">Add Files</button>
+                    <button class="btn-primary" id="convert-all-btn">Convert</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Options Modal -->
+    <div id="options-modal" class="modal" hidden>
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3 style="font-weight: 800;">Options</h3>
+                <button id="close-modal" style="background: transparent; border: none; color: white; cursor: pointer; font-size: 1.5rem;">&times;</button>
+            </div>
+            <div style="margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                    <label style="font-weight: 700; color: var(--text-muted);">Quality</label>
+                    <span id="modal-quality-val" style="color: var(--primary); font-weight: 800;">80%</span>
+                </div>
+                <input type="range" id="modal-quality-slider" min="1" max="100" value="80" style="width: 100%;">
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button id="apply-all-modal" class="btn-secondary" style="padding: 0.75rem 1rem;">Apply to all</button>
+                <button id="save-modal" class="btn-primary" style="padding: 0.75rem 2rem;">Okay</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
