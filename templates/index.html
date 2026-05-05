@@ -9,65 +9,131 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#ef4444',
+                        'primary-hover': '#dc2626',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-brand">
-            <i class="fa-solid fa-bolt" style="color: #ef4444; margin-right: 8px;"></i>
+    <div class="bg-gradient">
+        <div class="bg-shape-1"></div>
+        <div class="bg-shape-2"></div>
+    </div>
+    <div class="bg-noise"></div>
+
+    <nav class="navbar px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-[100]">
+        <div class="nav-brand flex items-center font-bold text-xl">
+            <i class="fa-solid fa-bolt text-primary mr-2"></i>
             <span>FILEONIX</span>
+        </div>
+        <div class="nav-links flex gap-4 md:gap-8">
+            {% if tool_title %}
+            <a href="/" class="nav-link text-sm font-bold flex items-center"><i class="fa-solid fa-arrow-left mr-2"></i> Back</a>
+            {% else %}
+            <a href="/" class="nav-link text-sm font-bold">Home</a>
+            {% endif %}
         </div>
     </nav>
 
-    <header class="hero-section">
-        <div class="hero-content">
-            <div class="hero-text">
-                <h1>Fileonix Converter</h1>
-                <p>Fast, secure, and intuitive file conversion. Support for PNG, JPG, WEBP, and more.</p>
+    <header class="hero-section px-4 py-12 md:py-24 border-b border-white/10">
+        <div class="container mx-auto max-w-5xl flex flex-col md:flex-row justify-between items-center gap-12 text-center md:text-left">
+            <div class="hero-text flex-1">
+                <h1 class="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight bg-gradient-to-r from-white via-zinc-400 to-white bg-clip-text text-transparent animate-pulse">{{ tool_title or 'Fileonix Converter' }}</h1>
+                <p class="text-lg md:text-xl text-white/70 max-w-xl mx-auto md:mx-0 leading-relaxed font-medium">{{ tool_desc or 'No stress, no confusion — just upload and convert.' }}</p>
             </div>
-            <div class="robot-container" id="robot-mascot">
+            <div class="robot-container shrink-0" id="robot-mascot">
                 <div class="speech-bubble" id="joke-bubble">Hey there!</div>
-                <div class="orb-mascot">
-                    <div class="orb-core"></div>
-                    <div class="orb-ring ring-1"></div>
-                    <div class="orb-ring ring-2"></div>
+                <div class="clock-mascot">
+                    <div class="clock-body">
+                        <div class="clock-face">
+                            <div class="clock-mark mark-12"></div>
+                            <div class="clock-mark mark-3"></div>
+                            <div class="clock-mark mark-6"></div>
+                            <div class="clock-mark mark-9"></div>
+                        </div>
+                        <div class="clock-eyes">
+                            <div class="eye">
+                                <div class="pupil"></div>
+                                <div class="eyelid"></div>
+                            </div>
+                            <div class="eye">
+                                <div class="pupil"></div>
+                                <div class="eyelid"></div>
+                            </div>
+                        </div>
+                        <div class="smile"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="app-container">
-        <!-- Dropzone -->
-        <div class="dropzone" id="dropzone">
-            <div class="dropzone-content">
-                <button class="btn-primary" id="main-select-btn">Select File</button>
-                <p>or drop files here</p>
-            </div>
-        </div>
-
-        <input type="file" id="file-input" multiple hidden accept="image/*">
-
-        <!-- File List Area -->
-        <div class="file-list-container" id="file-list-container" hidden>
-            <div class="file-list" id="file-list"></div>
-
-            <div class="action-bar">
-                <div id="ready-count" style="font-weight: 600; color: var(--text-muted);">0 files ready</div>
-                <div style="display: flex; gap: 1rem; align-items: center;">
-                    <div class="global-format" style="display: flex; align-items: center; gap: 8px; background: #262626; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);">
-                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">CONVERT ALL TO</span>
-                        <select id="global-format-select" style="background: transparent; border: none; color: white; font-weight: 800; cursor: pointer; outline: none;">
-                            <option value="WEBP">WEBP</option>
-                            <option value="PNG">PNG</option>
-                            <option value="JPEG">JPG</option>
-                            <option value="GIF">GIF</option>
-                            <option value="BMP">BMP</option>
-                        </select>
-                    </div>
-                    <button class="btn-secondary" id="add-more-btn">Add Files</button>
-                    <button class="btn-primary" id="convert-all-btn">Convert</button>
+    <main class="app-container container mx-auto max-w-5xl px-4 py-12">
+        {% if tool_title %}
+            <!-- Dropzone -->
+            <div class="dropzone p-8 md:p-20 text-center mb-8" id="dropzone">
+                <div class="dropzone-content">
+                    <button class="btn-primary mb-4" id="main-select-btn">Select File</button>
+                    <p class="text-white/60">or drop files here</p>
                 </div>
             </div>
-        </div>
+
+            <input type="file" id="file-input" multiple hidden accept="{{ accept or 'image/*' }}">
+
+            <!-- File List Area -->
+            <div class="file-list-container overflow-hidden rounded-3xl" id="file-list-container" hidden>
+                <div class="file-list" id="file-list"></div>
+
+                <div class="action-bar p-6 flex flex-col md:flex-row justify-between items-center gap-6 bg-black/20">
+                    <div id="ready-count" class="font-semibold text-zinc-400">0 files ready</div>
+                    <div class="action-bar-right flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                        <div class="global-format flex items-center gap-3 bg-[#262626] px-4 py-2 rounded-lg border border-white/10 w-full sm:w-auto justify-center">
+                            <span class="text-[0.7rem] text-zinc-500 font-bold uppercase tracking-wider">CONVERT ALL TO</span>
+                            <select id="global-format-select" class="bg-transparent border-none text-white font-extrabold cursor-pointer outline-none text-sm">
+                                <option value="WEBP">WEBP</option>
+                                <option value="PNG">PNG</option>
+                                <option value="JPEG">JPG</option>
+                            </select>
+                        </div>
+                        <button class="btn-secondary w-full sm:w-auto" id="add-more-btn">Add Files</button>
+                        <button class="btn-primary w-full sm:w-auto" id="convert-all-btn">Convert</button>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Tools Hub (Shown on Home Page) -->
+            <div class="tools-grid">
+                <a href="/image-converter" class="tool-card">
+                    <div class="icon-box"><i class="fa-solid fa-image"></i></div>
+                    <h3>Image Converter</h3>
+                    <p>Convert images between PNG, JPG, WEBP, and more with high quality.</p>
+                    <div class="arrow-hint">Get Started <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem;"></i></div>
+                </a>
+                
+                <a href="/word-to-pdf" class="tool-card">
+                    <div class="icon-box"><i class="fa-solid fa-file-word"></i></div>
+                    <h3>Document Converter</h3>
+                    <p>Convert Word to PDF or transform your PDF files back into editable Word documents.</p>
+                    <div class="arrow-hint">Get Started <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem;"></i></div>
+                </a>
+                
+                <a href="/pdf-to-image" class="tool-card">
+                    <div class="icon-box"><i class="fa-solid fa-file-pdf"></i></div>
+                    <h3>PDF Converter</h3>
+                    <p>Convert PDF to images or transform your images into high-quality PDF files.</p>
+                    <div class="arrow-hint">Get Started <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem;"></i></div>
+                </a>
+            </div>
+        {% endif %}
     </main>
 
     <!-- Options Modal -->
@@ -92,5 +158,17 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <i class="fa-solid fa-bolt" style="color: #ef4444;"></i>
+                <span>FILEONIX</span>
+            </div>
+            <p class="footer-text">Fast, secure, and professional file conversion for everyone.</p>
+            <div class="copyright">
+                &copy; 2024 Fileonix. All rights reserved.
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

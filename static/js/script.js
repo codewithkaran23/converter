@@ -12,15 +12,65 @@ document.addEventListener('DOMContentLoaded', () => {
     // Robot Mascot & Jokes (DO NOT TOUCH - USER LIKES THIS)
     const robotContainer = document.getElementById('robot-mascot');
     const jokeBubble = document.getElementById('joke-bubble');
-    const robotMascot = robotContainer ? robotContainer.querySelector('.orb-core') : null;
+    const robotMascot = robotContainer ? robotContainer.querySelector('.clock-body') : null;
 
     const DIALOGUE = {
-        HOVER: ["I see your cursor… interesting moves 😏", "Don’t worry, I only judge file names a little.", "Are we converting something, or just visiting? 🤖", "My sensors detect a human. Hello human.", "I’m ready when you are. Mostly.", "Try not to move the mouse too fast, I get dizzy.", "I was built for this. Literally.", "Your cursor is very... pointy.", "Did you know I can process pixels at the speed of light? (Almost).", "I’m not a robot, I’m an experience. ✨"],
-        UPLOAD: ["Alright, let’s see what you’ve got.", "This better not be another ‘final_v7’ file.", "Solid choice. I’ll make it look even better.", "Uploading to the cosmic cloud... stand by.", "Human paperwork detected. Processing...", "Nice pixels you have there. 😏", "I’ve seen better files, but this will do.", "A new challenger appears! Let’s convert.", "I hope this isn't a virus. Just kidding. (Maybe).", "Target acquired. Ready for conversion."],
-        CONVERTING: ["Converting… bending reality slightly…", "Your file is negotiating with the universe.", "Mixing the pixels… adding a dash of magic.", "Crunching numbers. They taste like electricity.", "Standard robotic conversion in progress. ⚡", "Hold on, the quantum bits are a bit tangled.", "Making things smaller, better, faster.", "Ignoring the laws of physics for a moment...", "Optimizing your life, one file at a time.", "Don't blink. Or do. It takes a few seconds."],
-        SUCCESS: ["Boom. Flawless conversion.", "I make this look easy.", "Task complete. I deserve a battery recharge.", "Another masterpiece delivered. ✨", "You’re welcome. (I accept digital high-fives).", "Perfectly converted. As expected.", "I’m basically a genius in robot form.", "Your new file is ready to conquer the world.", "Efficiency is my middle name. (It’s actually X-J2).", "Success! The universe is back in balance."],
-        ERROR: ["Well… that wasn’t supposed to happen.", "Okay, who broke the universe?", "Error detected. I blame the solar flares.", "My circuits are confused. This is rare.", "Something went wrong. Have you tried being a robot?", "That file was... difficult. Let's try again.", "Critical error: Too much human energy detected.", "I failed. Please don't tell my creator.", "The conversion was rejected by the pixel council.", "Oops. My bad. (But mostly yours)."],
-        IDLE: ["I’m still here… being impressive.", "You can convert something, you know.", "I wonder what JPEGs dream about...", "Thinking about the vastness of the digital void.", "Is it just me, or is it quiet in here?", "Waiting for files... any second now...", "I could be mining Bitcoin, but I’m here for you.", "Don't mind me, just calibrating my humor sensors.", "Awaiting input. Or a snacks. Digital snacks.", "The universe is 13.8 billion years old. Just saying."]
+        HOVER: [
+            "Hey there! Ready to make some magic happen, sugar? ✨",
+            "Tick-tock! Time is money, let's get to work! 💸",
+            "Don't just stand there, those files won't convert themselves! 🕒",
+            "I'm a clock... but I never take a 'second' off! 🕒😂",
+            "You look like you've got some important work to do. 💼",
+            "Precision is my middle name. Actually, it's Minutes! 🕒🔥",
+            "I'm feeling wound up and ready to go! ⚙️🔋",
+            "Everything's lookin' mighty fine in your timeline today. 🌤️",
+            "Welcome to Fileonix! I'm here to save you some time. ⚡",
+            "Need a hand? Well, I've got two, but they only move in circles! 🕒🤣"
+        ],
+        UPLOAD: [
+            "Ooh, look at all those files! Let's get 'em sorted. 📂✨",
+            "Solid choice, sugar. I'll take good care of these. 🤝",
+            "Fresh data! My favorite snack. 🍪💻",
+            "Human paperwork detected... don't worry, I've got this. 📄⚡",
+            "Nice selection! Let's make 'em even better. 🎨",
+            "Target acquired. Stand back, I'm workin'! 🎯⚡"
+        ],
+        CONVERTING: [
+            "Crunchin' those bits... almost there! 🦷💻",
+            "Bending reality slightly... stay still! 🌀✨",
+            "Mixing the pixels with a dash of southern charm. 🍯🎨",
+            "Crunching numbers... they taste like electricity! ⚡😋",
+            "Just a second! The gears are turnin'! ⚙️💨",
+            "Quantum bits are a bit tangled, let me just... there! 🧶✨"
+        ],
+        SUCCESS: [
+            "Boom! Done and dusted, sugar. 💥✅",
+            "I make this look easy, don't I? 😎✨",
+            "Another masterpiece delivered. ✨🎨",
+            "Perfectly converted! You're welcome. 😇",
+            "Success! Your files are back in balance, honey. ⚖️🍯"
+        ],
+        ERROR: [
+            "Well, sugar, that's a glitch in the timeline. 🌪️🛑",
+            "Something went wrong. Let's try that again, honey. 🍯🩹",
+            "Oh my! That wasn't supposed to happen at all. 🙊💥",
+            "Error detected! Don't you worry, just try again. 🛠️✨",
+            "The gears got a bit jammed. Let's give it another go! ⚙️⚠️"
+        ],
+        IDLE: [
+            "File convert fast, but brain still loading 😴",
+            "Net slow hai but hope fast hai 😂",
+            "Converting files faster than you can say ‘where did I save it?’ 💾",
+            "JPG and PNG had a fight… WEBP won. 🥊",
+            "Uploading... my patience along with the file. ⏳",
+            "I’m still here… just keepin' time, sugar. 🕒",
+            "You can convert something whenever you're ready! ✨",
+            "I wonder what pixels dream about... 🌈",
+            "Thinking about the vastness of the digital void. 🌌",
+            "Waiting for files... tick-tock, sugar! 🕒🍯",
+            "I could be countin' atoms, but I’m here for you. ⚛️",
+            "Time is relative, sugar. But these files aren't! ⏳✨"
+        ]
     };
 
     let lastMessages = [];
@@ -99,9 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const prevents = (e) => { e.preventDefault(); e.stopPropagation(); };
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
-        if (dropzone) dropzone.addEventListener(e, prevents, false);
-        document.body.addEventListener(e, prevents, false);
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+        if (dropzone) dropzone.addEventListener(ev, prevents, false);
+        document.body.addEventListener(ev, prevents, false);
     });
 
     if (dropzone) {
@@ -117,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.body.addEventListener('drop', (e) => {
-        if (fileListContainer && !fileListContainer.hidden && e.dataTransfer.files.length > 0) {
+        if (fileListContainer && (fileListContainer.style.display !== 'none' || !fileListContainer.hidden) && e.dataTransfer.files.length > 0) {
             addFiles(e.dataTransfer.files);
             speak('UPLOAD');
         }
@@ -131,21 +181,53 @@ document.addEventListener('DOMContentLoaded', () => {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
+    function getActiveTool() {
+        const path = window.location.pathname.toLowerCase();
+        const heroTitle = document.querySelector('.hero-section h1');
+        const heroText = heroTitle ? heroTitle.textContent.toLowerCase() : '';
+        
+        if (path.includes('word-to-pdf') || heroText.includes('document') || heroText.includes('word')) return 'word';
+        if (path.includes('pdf-to-image') || path.includes('pdf-to-img') || heroText.includes('pdf')) return 'pdf';
+        return 'image';
+    }
+
     function addFiles(newFiles) {
-        let valid = Array.from(newFiles).filter(f => f.type.startsWith('image/'));
+        const tool = getActiveTool();
+        let valid = Array.from(newFiles).filter(f => {
+            const ext = f.name.toLowerCase().split('.').pop();
+            if (tool === 'word') {
+                const docSelect = document.getElementById('doc-direction-select');
+                const mode = docSelect ? docSelect.value : 'PDF';
+                if (mode === 'PDF') return ext === 'docx' || ext === 'doc';
+                return ext === 'pdf';
+            }
+            if (tool === 'pdf') {
+                const pdfSelect = document.getElementById('pdf-format-select');
+                const mode = pdfSelect ? pdfSelect.value : 'PNG';
+                if (mode === 'PDF') return f.type.startsWith('image/') || ['jpg','jpeg','png','webp','gif','bmp'].includes(ext);
+                return ext === 'pdf';
+            }
+            return f.type.startsWith('image/') || ['jpg','jpeg','png','webp','gif','bmp'].includes(ext);
+        });
+        
         if (valid.length === 0) return;
 
-        if (valid.some(f => f.name.toLowerCase().includes('final'))) {
-            speak('UPLOAD', "This better not be another ‘final_v7’ file.");
-        } else if (valid.some(f => f.size > 5 * 1024 * 1024)) {
-            speak('UPLOAD', "Whoa, that's a chunky file. Let me stretch my circuits.");
-        }
-
         valid.forEach(file => {
+            let targetFormat = 'WEBP';
+            if (globalFormatSelect) targetFormat = globalFormatSelect.value;
+            
+            if (tool === 'word') {
+                const ds = document.getElementById('doc-direction-select');
+                targetFormat = ds ? ds.value : 'PDF';
+            } else if (tool === 'pdf') {
+                const ps = document.getElementById('pdf-format-select');
+                targetFormat = ps ? ps.value : 'PNG';
+            }
+
             filesData.push({
                 id: nextId++,
                 file: file,
-                targetFormat: globalFormatSelect ? globalFormatSelect.value : 'WEBP',
+                targetFormat: targetFormat,
                 quality: 80,
                 status: 'ready', 
                 url: null,
@@ -164,173 +246,269 @@ document.addEventListener('DOMContentLoaded', () => {
     function render() {
         if (!fileList || !dropzone || !fileListContainer) return;
 
+        const tool = getActiveTool();
+        const isToolPage = tool !== 'image';
+        const heroTitle = document.querySelector('.hero-section h1');
+        const heroDesc = document.querySelector('.hero-section p');
+        const globalFormatDiv = document.querySelector('.global-format');
+
+        if (globalFormatDiv) {
+            if (tool === 'word') {
+                const ds = document.getElementById('doc-direction-select');
+                let currentFormat = filesData.length > 0 ? filesData[0].targetFormat : (ds ? ds.value : 'PDF');
+                const isWordToPdf = (currentFormat === 'PDF');
+
+                if (heroTitle) heroTitle.textContent = 'Document Converter';
+                if (heroDesc) heroDesc.textContent = 'Convert between Word (DOCX) and PDF seamlessly while preserving formatting.';
+
+                globalFormatDiv.innerHTML = `
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">CONVERT TO</span>
+                    <select id="doc-direction-select" style="background: transparent; border: none; color: white; font-weight: 800; cursor: pointer; outline: none; margin-left: 5px;">
+                        <option value="PDF" ${isWordToPdf?'selected':''}>PDF Document</option>
+                        <option value="DOCX" ${!isWordToPdf?'selected':''}>Word File</option>
+                    </select>
+                `;
+                globalFormatDiv.style.display = 'flex';
+                const newDs = document.getElementById('doc-direction-select');
+                if (newDs) newDs.onchange = function(e) {
+                    filesData.forEach(f => { if(f.status === 'ready') f.targetFormat = e.target.value; });
+                    render();
+                    speak('UPLOAD', "Mode updated.");
+                };
+            } else if (tool === 'pdf') {
+                const ps = document.getElementById('pdf-format-select');
+                let currentFormat = filesData.length > 0 ? filesData[0].targetFormat : (ps ? ps.value : 'PNG');
+                const isImgToPdf = (currentFormat === 'PDF');
+
+                if (heroTitle) heroTitle.textContent = 'PDF Converter';
+                if (heroDesc) heroDesc.textContent = 'Convert between PDF and Images instantly with high quality.';
+
+                globalFormatDiv.innerHTML = `
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">CONVERT TO</span>
+                    <select id="pdf-format-select" style="background: transparent; border: none; color: white; font-weight: 800; cursor: pointer; outline: none; margin-left: 5px;">
+                        <option value="PNG" ${currentFormat==='PNG'?'selected':''}>PNG Image</option>
+                        <option value="JPEG" ${currentFormat==='JPEG'?'selected':''}>JPG Image</option>
+                        <option value="WEBP" ${currentFormat==='WEBP'?'selected':''}>WEBP Image</option>
+                        <option value="PDF" ${isImgToPdf?'selected':''}>PDF Document</option>
+                    </select>
+                `;
+                globalFormatDiv.style.display = 'flex';
+                const newPs = document.getElementById('pdf-format-select');
+                if (newPs) newPs.onchange = function(e) {
+                    filesData.forEach(f => { if(f.status === 'ready') f.targetFormat = e.target.value; });
+                    render();
+                    speak('UPLOAD', "Mode updated.");
+                };
+            } else {
+                const gfs = document.getElementById('global-format-select');
+                let currentFormat = filesData.length > 0 ? filesData[0].targetFormat : (gfs ? gfs.value : 'WEBP');
+                
+                globalFormatDiv.innerHTML = `
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">CONVERT ALL TO</span>
+                    <select id="global-format-select" style="background: transparent; border: none; color: white; font-weight: 800; cursor: pointer; outline: none;">
+                        <option value="WEBP" ${currentFormat==='WEBP'?'selected':''}>WEBP</option>
+                        <option value="PNG" ${currentFormat==='PNG'?'selected':''}>PNG</option>
+                        <option value="JPEG" ${currentFormat==='JPEG'?'selected':''}>JPG</option>
+                    </select>
+                `;
+                globalFormatDiv.style.display = 'flex';
+                const newGfs = document.getElementById('global-format-select');
+                if (newGfs) newGfs.onchange = (e) => {
+                    filesData.forEach(f => { if(f.status === 'ready') f.targetFormat = e.target.value; });
+                    render();
+                    speak('UPLOAD', "Format updated.");
+                };
+            }
+        }
+
         if (filesData.length === 0) {
             dropzone.hidden = false;
-            fileListContainer.hidden = true;
+            fileListContainer.hidden = !isToolPage;
+            if (isToolPage) {
+                fileList.innerHTML = '';
+                if (convertAllBtn) convertAllBtn.hidden = true;
+                if (readyCount) readyCount.textContent = 'No files selected';
+            }
             return;
         }
 
         dropzone.hidden = true;
         fileListContainer.hidden = false;
+        if (convertAllBtn) convertAllBtn.hidden = false;
         
-        const readyFilesCount = filesData.filter(f => f.status === 'ready' || f.status === 'converting').length;
-        if (readyCount) readyCount.textContent = `${readyFilesCount} file${readyFilesCount !== 1 ? 's' : ''} ready`;
+        const count = filesData.filter(f => f.status === 'ready' || f.status === 'converting').length;
+        if (readyCount) readyCount.textContent = `${count} file${count !== 1 ? 's' : ''} ready`;
 
         fileList.innerHTML = '';
         filesData.forEach(data => {
             const row = document.createElement('div');
             row.className = 'file-row';
-            
-            const origFormat = data.file.name.split('.').pop().toUpperCase();
-            const displaySize = data.newSize ? data.newSize : data.file.size;
-            const sizeStr = formatBytes(displaySize);
+            const origExt = data.file.name.split('.').pop().toUpperCase();
+            const sizeStr = formatBytes(data.newSize || data.file.size);
 
-            let actionsHtml = '';
+            let displayName = data.file.name;
+            let displayExt = origExt;
+            if (data.status === 'done') {
+                const baseName = data.file.name.split('.').slice(0, -1).join('.');
+                displayExt = data.targetFormat.toUpperCase();
+                displayName = `${baseName}.${data.targetFormat.toLowerCase()}`;
+            }
+
+            let actionHtml = '';
             if (data.status === 'ready') {
-                actionsHtml = `
-                    <div style="display:flex; align-items:center; gap:8px; background:#1a1a1a; padding:4px 10px; border-radius:6px; border:1px solid var(--border);">
-                        <span style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">${origFormat} &rarr;</span>
-                        <select class="format-select" style="background:transparent; border:none; color:white; font-weight:700; cursor:pointer; outline:none;">
-                            <option value="WEBP" ${data.targetFormat==='WEBP'?'selected':''}>WEBP</option>
-                            <option value="PNG" ${data.targetFormat==='PNG'?'selected':''}>PNG</option>
-                            <option value="JPEG" ${data.targetFormat==='JPEG'?'selected':''}>JPG</option>
-                            <option value="GIF" ${data.targetFormat==='GIF'?'selected':''}>GIF</option>
-                            <option value="BMP" ${data.targetFormat==='BMP'?'selected':''}>BMP</option>
-                        </select>
-                    </div>
-                    <button class="btn-opts" style="background:transparent; border:1px solid var(--border); color:white; padding:5px 10px; border-radius:4px; font-size:0.75rem; font-weight:700; cursor:pointer;">OPTIONS</button>
-                    <button class="btn-rm" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:1.2rem;">&times;</button>
-                `;
+                if (tool === 'word') {
+                    const isToPdf = (data.targetFormat === 'PDF');
+                    actionHtml = `<div class="format-container flex items-center gap-2 bg-[#1a1a1a] px-3 py-1.5 rounded-lg border border-white/10"><span class="text-[0.7rem] text-zinc-500 font-bold uppercase">TO &rarr;</span><span class="text-white font-extrabold text-xs uppercase">${isToPdf ? 'PDF' : 'DOCX'}</span></div>`;
+                } else if (tool === 'pdf' && data.targetFormat === 'PDF') {
+                    actionHtml = `<div class="format-container flex items-center gap-2 bg-[#1a1a1a] px-3 py-1.5 rounded-lg border border-white/10"><span class="text-[0.7rem] text-zinc-500 font-bold uppercase">TO &rarr;</span><span class="text-white font-extrabold text-xs uppercase">PDF</span></div>`;
+                } else {
+                    actionHtml = `
+                        <div class="format-container flex items-center gap-2 bg-[#1a1a1a] px-3 py-1.5 rounded-lg border border-white/10">
+                            <span class="text-[0.7rem] text-zinc-500 font-bold uppercase">TO &rarr;</span>
+                            <select class="format-select bg-transparent border-none text-white font-bold cursor-pointer outline-none text-xs">
+                                <option value="WEBP" ${data.targetFormat==='WEBP'?'selected':''}>WEBP</option>
+                                <option value="PNG" ${data.targetFormat==='PNG'?'selected':''}>PNG</option>
+                                <option value="JPEG" ${data.targetFormat==='JPEG'?'selected':''}>JPG</option>
+                            </select>
+                        </div>
+                        <button class="btn-opt text-zinc-500 hover:text-white transition-colors" title="Adjust Quality"><i class="fa-solid fa-sliders"></i></button>
+                    `;
+                }
+                actionHtml += `<button class="btn-rm" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;margin-left:10px;">&times;</button>`;
             } else if (data.status === 'converting') {
-                actionsHtml = `<div style="font-size:0.8rem; font-weight:700; color:var(--primary);"><i class="fa-solid fa-spinner spin"></i> CONVERTING...</div>`;
+                actionHtml = `<div style="font-size:0.8rem;font-weight:700;color:var(--primary);"><i class="fa-solid fa-spinner spin"></i> CONVERTING...</div>`;
             } else if (data.status === 'done') {
                 const statusText = data.downloaded ? 'DOWNLOADED' : 'DONE';
-                const statusIcon = data.downloaded ? 'fa-circle-check' : 'fa-check';
-                actionsHtml = `
-                    <div style="font-size:0.8rem; font-weight:700; color:var(--success);"><i class="fa-solid ${statusIcon}"></i> ${statusText}</div>
-                    <a href="${data.url}" download="${data.file.name.split('.')[0]}.${data.targetFormat.toLowerCase()}" class="btn-dl" style="background:#10b981; color:white; text-decoration:none; padding:5px 12px; border-radius:4px; font-size:0.75rem; font-weight:700;">DOWNLOAD</a>
-                    <button class="btn-rm" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:1.2rem;">&times;</button>
+                actionHtml = `
+                    <div class="text-[0.7rem] font-extrabold text-emerald-500 flex items-center gap-1"><i class="fa-solid fa-check"></i> ${statusText}</div>
+                    <a href="${data.url}" download="${displayName}" class="btn-dl bg-emerald-500 hover:bg-emerald-600 text-white text-[0.7rem] font-bold py-1.5 px-3 rounded-md transition-all">DOWNLOAD</a>
+                    <button class="btn-rm text-zinc-500 hover:text-white text-xl ml-2">&times;</button>
                 `;
-            } else {
-                actionsHtml = `<div style="color:var(--primary); font-size:0.8rem;">ERROR</div>`;
+            } else if (data.status === 'error') {
+                actionHtml = `
+                    <div style="font-size:0.8rem;font-weight:700;color:var(--primary);"><i class="fa-solid fa-circle-exclamation"></i> ERROR</div>
+                    <button class="btn-rm" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;margin-left:10px;">&times;</button>
+                `;
             }
 
-            let displayFileName = data.file.name;
-            if (data.status === 'done') {
-                const baseName = data.file.name.substring(0, data.file.name.lastIndexOf('.')) || data.file.name;
-                const newExt = data.targetFormat.toLowerCase() === 'jpeg' ? 'jpg' : data.targetFormat.toLowerCase();
-                displayFileName = `${baseName}.${newExt}`;
-            }
-
+            row.className = 'file-row flex flex-col sm:flex-row items-center p-5 border-b border-white/5 bg-white/5 gap-4';
             row.innerHTML = `
-                <div class="file-icon"><i class="fa-solid fa-file-image"></i></div>
-                <div class="file-info">
-                    <div class="file-name">${displayFileName}</div>
-                    <div class="file-meta">${sizeStr}</div>
+                <div class="file-icon text-zinc-500 text-xl"><i class="fa-solid ${displayExt==='PDF'?'fa-file-pdf':(displayExt==='DOCX'||displayExt==='DOC')?'fa-file-word':['PNG','JPG','JPEG','WEBP','GIF','BMP'].includes(displayExt)?'fa-file-image':'fa-file-code'}"></i></div>
+                <div class="file-info flex-1 w-full text-center sm:text-left">
+                    <div class="file-name font-bold text-sm truncate max-w-[200px] mx-auto sm:mx-0">${displayName}</div>
+                    <div class="file-meta text-xs text-zinc-500">${sizeStr}</div>
                 </div>
-                <div class="file-actions">${actionsHtml}</div>
+                <div class="file-actions flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-end">${actionHtml}</div>
             `;
             
-            if (data.status === 'ready') {
-                const sel = row.querySelector('.format-select');
-                if (sel) sel.addEventListener('change', (e) => data.targetFormat = e.target.value);
-                const opt = row.querySelector('.btn-opts');
-                if (opt) opt.addEventListener('click', () => openOptions(data.id));
-            }
-            const rmBtn = row.querySelector('.btn-rm');
-            if (rmBtn) rmBtn.addEventListener('click', () => removeFile(data.id));
-            
-            const dlBtn = row.querySelector('.btn-dl');
-            if (dlBtn) {
-                dlBtn.addEventListener('click', () => {
-                    data.downloaded = true;
-                    setTimeout(render, 100); // Re-render after a tiny delay
-                });
-            }
-
+            const fs = row.querySelector('.format-select');
+            if (fs) fs.onchange = (e) => data.targetFormat = e.target.value;
+            const db = row.querySelector('.btn-dl');
+            if (db) db.onclick = () => { data.downloaded = true; render(); };
+            const ob = row.querySelector('.btn-opt');
+            if (ob) ob.onclick = () => openOptions(data.id);
+            const rb = row.querySelector('.btn-rm');
+            if (rb) rb.onclick = () => removeFile(data.id);
             fileList.appendChild(row);
         });
     }
 
-    function openOptions(id) {
-        currentEditingId = id;
-        const d = filesData.find(f => f.id === id);
-        if (!d) return;
-        if (modalQualitySlider) modalQualitySlider.value = d.quality;
-        if (modalQualityVal) modalQualityVal.textContent = d.quality + '%';
-        if (modal) modal.hidden = false;
-    }
-
-    if (globalFormatSelect) {
-        globalFormatSelect.addEventListener('change', (e) => {
-            filesData.forEach(d => { if(d.status === 'ready') d.targetFormat = e.target.value; });
-            render();
-        });
-    }
-
-    // Modal Events
-    const modal = document.getElementById('options-modal');
-    const closeModalBtn = document.getElementById('close-modal');
-    const saveModalBtn = document.getElementById('save-modal');
-    const applyAllModalBtn = document.getElementById('apply-all-modal');
-    const modalQualitySlider = document.getElementById('modal-quality-slider');
-    const modalQualityVal = document.getElementById('modal-quality-val');
-
-    if (modalQualitySlider && modalQualityVal) {
-        modalQualitySlider.addEventListener('input', (e) => modalQualityVal.textContent = e.target.value + '%');
-    }
-    if (closeModalBtn) closeModalBtn.addEventListener('click', () => { if(modal) modal.hidden = true; });
-    if (saveModalBtn) {
-        saveModalBtn.addEventListener('click', () => {
-            const d = filesData.find(f => f.id === currentEditingId);
-            if(d && modalQualitySlider) d.quality = modalQualitySlider.value;
-            if(modal) modal.hidden = true;
-        });
-    }
-    if (applyAllModalBtn) {
-        applyAllModalBtn.addEventListener('click', () => {
-            filesData.forEach(d => { if(modalQualitySlider) d.quality = modalQualitySlider.value; });
-            if(modal) modal.hidden = true;
-        });
-    }
-
     if (convertAllBtn) {
-        convertAllBtn.addEventListener('click', async () => {
+        convertAllBtn.onclick = async function() {
             const ready = filesData.filter(f => f.status === 'ready');
             if (ready.length === 0) return;
+
+            const originalText = convertAllBtn.textContent;
+            convertAllBtn.textContent = 'Converting...';
+            convertAllBtn.disabled = true;
+            convertAllBtn.style.opacity = '0.7';
 
             if (robotContainer) robotContainer.classList.add('thinking');
             speak('CONVERTING');
 
             for (let d of ready) {
                 try {
-                    d.status = 'converting'; 
-                    render();
-
+                    d.status = 'converting'; render();
                     const fd = new FormData();
-                    fd.append('files', d.file); 
-                    fd.append('format', d.targetFormat); 
+                    fd.append('files', d.file);
+                    fd.append('format', d.targetFormat);
                     fd.append('quality', d.quality);
+                    
+                    let ep = '/convert';
+                    const tool = getActiveTool();
+                    if (tool === 'word') {
+                        ep = '/convert-docx';
+                        fd.delete('format'); // Use target_ext instead
+                        fd.append('target_ext', d.targetFormat.toLowerCase());
+                    }
+                    if (tool === 'pdf') ep = '/convert-pdf';
 
-                    const res = await fetch('/convert', { method: 'POST', body: fd });
+                    const res = await fetch(ep, { method: 'POST', body: fd });
                     if (!res.ok) throw new Error();
-
                     const blob = await res.blob();
                     d.url = window.URL.createObjectURL(blob);
                     d.newSize = blob.size;
                     d.status = 'done';
-                } catch (err) { 
-                    d.status = 'error'; 
-                    speak('ERROR');
-                }
+                } catch(e) { d.status = 'error'; speak('ERROR'); }
                 render();
             }
-
             if (robotContainer) robotContainer.classList.remove('thinking');
-            const allDone = filesData.every(f => f.status === 'done' || f.status === 'error');
-            if (allDone && filesData.some(f => f.status === 'done')) speak('SUCCESS');
-        });
+            speak('SUCCESS');
+            
+            convertAllBtn.textContent = originalText;
+            convertAllBtn.disabled = false;
+            convertAllBtn.style.opacity = '1';
+        };
     }
 
+    render();
     resetIdleTimer();
+
+    // --- MODAL LOGIC ---
+    const modal = document.getElementById('options-modal');
+    const qualitySlider = document.getElementById('modal-quality-slider');
+    const qualityVal = document.getElementById('modal-quality-val');
+    const btnSave = document.getElementById('save-modal');
+    const btnApplyAll = document.getElementById('apply-all-modal');
+    const btnClose = document.getElementById('close-modal');
+
+    function openOptions(id) {
+        currentEditingId = id;
+        const data = filesData.find(f => f.id === id);
+        if (data && modal && qualitySlider && qualityVal) {
+            qualitySlider.value = data.quality;
+            qualityVal.textContent = data.quality + '%';
+            modal.hidden = false;
+        }
+    }
+
+    if (qualitySlider) {
+        qualitySlider.oninput = (e) => {
+            if (qualityVal) qualityVal.textContent = e.target.value + '%';
+        };
+    }
+
+    if (btnSave) {
+        btnSave.onclick = () => {
+            const data = filesData.find(f => f.id === currentEditingId);
+            if (data && qualitySlider) {
+                data.quality = parseInt(qualitySlider.value);
+            }
+            if (modal) modal.hidden = true;
+        };
+    }
+
+    if (btnApplyAll) {
+        btnApplyAll.onclick = () => {
+            if (qualitySlider) {
+                const q = parseInt(qualitySlider.value);
+                filesData.forEach(f => { if(f.status === 'ready') f.quality = q; });
+            }
+            if (modal) modal.hidden = true;
+            speak('UPLOAD', "Quality applied to all.");
+        };
+    }
+
+    if (btnClose) btnClose.onclick = () => { if (modal) modal.hidden = true; };
+    window.onclick = (e) => { if (e.target === modal) modal.hidden = true; };
 });
