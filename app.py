@@ -8,7 +8,11 @@ from docx2pdf import convert as docx_to_pdf_conv
 from pdf2docx import Converter as pdf_to_docx_conv
 import tempfile
 import shutil
-import pythoncom
+if os.name == 'nt':
+    import pythoncom
+else:
+    pythoncom = None
+
 
 app = Flask(__name__)
 
@@ -105,6 +109,9 @@ def convert_docx():
             file.save(temp_in)
             if target_ext == 'pdf':
                 # Word to PDF
+                if os.name != 'nt' or pythoncom is None:
+                    return jsonify({'error': 'Word to PDF conversion is only supported on Windows servers with Microsoft Word installed. For cloud deployment, consider using an alternative library or API.'}), 400
+                
                 pythoncom.CoInitialize()
                 try:
                     docx_to_pdf_conv(temp_in, temp_out)

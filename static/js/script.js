@@ -196,37 +196,39 @@ document.addEventListener('DOMContentLoaded', () => {
         let valid = Array.from(newFiles).filter(f => {
             const ext = f.name.toLowerCase().split('.').pop();
             if (tool === 'word') {
-                const docSelect = document.getElementById('doc-direction-select');
-                const mode = docSelect ? docSelect.value : 'PDF';
-                if (mode === 'PDF') return ext === 'docx' || ext === 'doc';
-                return ext === 'pdf';
+                return ext === 'docx' || ext === 'doc' || ext === 'pdf';
             }
             if (tool === 'pdf') {
-                const pdfSelect = document.getElementById('pdf-format-select');
-                const mode = pdfSelect ? pdfSelect.value : 'PNG';
-                if (mode === 'PDF') return f.type.startsWith('image/') || ['jpg','jpeg','png','webp','gif','bmp'].includes(ext);
-                return ext === 'pdf';
+                return ext === 'pdf' || f.type.startsWith('image/') || ['jpg','jpeg','png','webp','gif','bmp'].includes(ext);
             }
-            return f.type.startsWith('image/') || ['jpg','jpeg','png','webp','gif','bmp'].includes(ext);
+            return f.type.startsWith('image/') || ['jpg','jpeg','png','webp','gif','bmp', 'pdf'].includes(ext);
         });
         
         if (valid.length === 0) return;
 
         valid.forEach(file => {
+            const ext = file.name.toLowerCase().split('.').pop();
             let targetFormat = 'WEBP';
-            if (globalFormatSelect) targetFormat = globalFormatSelect.value;
-            
+            const gfs = document.getElementById('global-format-select');
+            const ps = document.getElementById('pdf-format-select');
+            const ds = document.getElementById('doc-direction-select');
+
             if (tool === 'word') {
-                const ds = document.getElementById('doc-direction-select');
-                targetFormat = ds ? ds.value : 'PDF';
+                targetFormat = (ext === 'pdf') ? 'DOCX' : 'PDF';
             } else if (tool === 'pdf') {
-                const ps = document.getElementById('pdf-format-select');
-                targetFormat = ps ? ps.value : 'PNG';
+                targetFormat = (ext === 'pdf') ? (ps ? ps.value : 'PNG') : 'PDF';
+                if (targetFormat === 'PDF' && ext === 'pdf') targetFormat = 'PNG';
+            } else {
+                targetFormat = gfs ? gfs.value : (ps ? ps.value : 'WEBP');
+                if (ext === 'pdf' && targetFormat === 'PDF') targetFormat = 'PNG';
             }
+
+            const previewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
 
             filesData.push({
                 id: nextId++,
                 file: file,
+                previewUrl: previewUrl,
                 targetFormat: targetFormat,
                 quality: 80,
                 status: 'ready', 
@@ -239,6 +241,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function removeFile(id) {
+        const file = filesData.find(f => f.id === id);
+        if (file && file.previewUrl) URL.revokeObjectURL(file.previewUrl);
         filesData = filesData.filter(f => f.id !== id);
         render();
     }
@@ -309,6 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <option value="WEBP" ${currentFormat==='WEBP'?'selected':''}>WEBP</option>
                         <option value="PNG" ${currentFormat==='PNG'?'selected':''}>PNG</option>
                         <option value="JPEG" ${currentFormat==='JPEG'?'selected':''}>JPG</option>
+                        <option value="PDF" ${currentFormat==='PDF'?'selected':''}>PDF</option>
                     </select>
                 `;
                 globalFormatDiv.style.display = 'flex';
@@ -369,6 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <option value="WEBP" ${data.targetFormat==='WEBP'?'selected':''}>WEBP</option>
                                 <option value="PNG" ${data.targetFormat==='PNG'?'selected':''}>PNG</option>
                                 <option value="JPEG" ${data.targetFormat==='JPEG'?'selected':''}>JPG</option>
+                                <option value="PDF" ${data.targetFormat==='PDF'?'selected':''}>PDF</option>
                             </select>
                         </div>
                         <button class="btn-opt text-zinc-500 hover:text-white transition-colors" title="Adjust Quality"><i class="fa-solid fa-sliders"></i></button>
@@ -391,9 +397,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
 
+            let iconHtml = `<i class="fa-solid ${displayExt==='PDF'?'fa-file-pdf':(displayExt==='DOCX'||displayExt==='DOC')?'fa-file-word':['PNG','JPG','JPEG','WEBP','GIF','BMP'].includes(displayExt)?'fa-file-image':'fa-file-code'}"></i>`;
+            if (data.previewUrl) {
+                iconHtml = `<img src="${data.previewUrl}" class="w-full h-full object-cover rounded" style="width: 40px; height: 40px; min-width: 40px;">`;
+            }
+
             row.className = 'file-row flex flex-col sm:flex-row items-center p-5 border-b border-white/5 bg-white/5 gap-4';
             row.innerHTML = `
-                <div class="file-icon text-zinc-500 text-xl"><i class="fa-solid ${displayExt==='PDF'?'fa-file-pdf':(displayExt==='DOCX'||displayExt==='DOC')?'fa-file-word':['PNG','JPG','JPEG','WEBP','GIF','BMP'].includes(displayExt)?'fa-file-image':'fa-file-code'}"></i></div>
+                <div class="file-icon text-zinc-500 text-xl w-10 h-10 flex items-center justify-center bg-white/5 rounded overflow-hidden">${iconHtml}</div>
                 <div class="file-info flex-1 w-full text-center sm:text-left">
                     <div class="file-name font-bold text-sm truncate max-w-[200px] mx-auto sm:mx-0">${displayName}</div>
                     <div class="file-meta text-xs text-zinc-500">${sizeStr}</div>
