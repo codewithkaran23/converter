@@ -186,6 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const heroTitle = document.querySelector('.hero-section h1');
         const heroText = heroTitle ? heroTitle.textContent.toLowerCase() : '';
         
+        if (path.includes('bg-remover') || heroText.includes('bg remover')) return 'bgrem';
+        if (path.includes('watermark') || heroText.includes('watermark')) return 'watermark';
         if (path.includes('word-to-pdf') || heroText.includes('document') || heroText.includes('word')) return 'word';
         if (path.includes('pdf-to-image') || path.includes('pdf-to-img') || heroText.includes('pdf')) return 'pdf';
         return 'image';
@@ -195,6 +197,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const tool = getActiveTool();
         let valid = Array.from(newFiles).filter(f => {
             const ext = f.name.toLowerCase().split('.').pop();
+            if (tool === 'bgrem' || tool === 'watermark') {
+                return f.type.startsWith('image/') || ['jpg','jpeg','png','webp','gif','bmp'].includes(ext);
+            }
             if (tool === 'word') {
                 return ext === 'docx' || ext === 'doc' || ext === 'pdf';
             }
@@ -213,7 +218,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const ps = document.getElementById('pdf-format-select');
             const ds = document.getElementById('doc-direction-select');
 
-            if (tool === 'word') {
+            if (tool === 'bgrem') {
+                targetFormat = 'PNG';
+            } else if (tool === 'watermark') {
+                targetFormat = 'PNG';
+            } else if (tool === 'word') {
                 targetFormat = (ext === 'pdf') ? 'DOCX' : 'PDF';
             } else if (tool === 'pdf') {
                 targetFormat = (ext === 'pdf') ? (ps ? ps.value : 'PNG') : 'PDF';
@@ -257,7 +266,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const globalFormatDiv = document.querySelector('.global-format');
 
         if (globalFormatDiv) {
-            if (tool === 'word') {
+            if (tool === 'bgrem') {
+                globalFormatDiv.innerHTML = `
+                    <span style="font-size: 0.8rem; color: #10b981; font-weight: 700;"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right: 4px;"></i> OUTPUT: PNG (Transparent)</span>
+                `;
+                globalFormatDiv.style.display = 'flex';
+            } else if (tool === 'watermark') {
+                globalFormatDiv.innerHTML = `
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">FORMAT</span>
+                    <select id="wmark-format-select" style="background: transparent; border: none; color: white; font-weight: 800; cursor: pointer; outline: none; margin-left: 5px;">
+                        <option value="PNG">PNG</option>
+                        <option value="JPEG">JPG</option>
+                        <option value="WEBP">WEBP</option>
+                    </select>
+                `;
+                globalFormatDiv.style.display = 'flex';
+                const wfs = document.getElementById('wmark-format-select');
+                if (wfs) wfs.onchange = (e) => {
+                    filesData.forEach(f => { if(f.status === 'ready') f.targetFormat = e.target.value; });
+                    render();
+                };
+            } else if (tool === 'word') {
                 const ds = document.getElementById('doc-direction-select');
                 let currentFormat = filesData.length > 0 ? filesData[0].targetFormat : (ds ? ds.value : 'PDF');
                 const isWordToPdf = (currentFormat === 'PDF');
@@ -361,7 +390,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let actionHtml = '';
             if (data.status === 'ready') {
-                if (tool === 'word') {
+                if (tool === 'bgrem') {
+                    actionHtml = `<div class="format-container flex items-center gap-2 bg-[#1a1a1a] px-3 py-1.5 rounded-lg border border-white/10"><span class="text-[0.7rem] text-emerald-400 font-bold uppercase"><i class="fa-solid fa-wand-magic-sparkles" style="margin-right: 4px;"></i>REMOVE BG</span></div>`;
+                } else if (tool === 'watermark') {
+                    actionHtml = `<div class="format-container flex items-center gap-2 bg-[#1a1a1a] px-3 py-1.5 rounded-lg border border-white/10"><span class="text-[0.7rem] text-indigo-400 font-bold uppercase"><i class="fa-solid fa-stamp" style="margin-right: 4px;"></i>WATERMARK</span></div>`;
+                } else if (tool === 'word') {
                     const isToPdf = (data.targetFormat === 'PDF');
                     actionHtml = `<div class="format-container flex items-center gap-2 bg-[#1a1a1a] px-3 py-1.5 rounded-lg border border-white/10"><span class="text-[0.7rem] text-zinc-500 font-bold uppercase">TO &rarr;</span><span class="text-white font-extrabold text-xs uppercase">${isToPdf ? 'PDF' : 'DOCX'}</span></div>`;
                 } else if (tool === 'pdf' && data.targetFormat === 'PDF') {
@@ -447,7 +480,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     let ep = '/convert';
                     const tool = getActiveTool();
-                    if (tool === 'word') {
+                    if (tool === 'bgrem') {
+                        ep = '/remove-bg';
+                        const hpToggle = document.getElementById('bg-high-precision');
+                        if (hpToggle) fd.append('high_precision', hpToggle.checked);
+                    } else if (tool === 'watermark') {
+                        ep = '/add-watermark';
+                        // Read watermark options from the panel
+                        const wmPanel = document.getElementById('watermark-options-panel');
+                        if (wmPanel) {
+                            const wText = document.getElementById('wm-text');
+                            const wOpacity = document.getElementById('wm-opacity');
+                            const wFontSize = document.getElementById('wm-fontsize');
+                            const wPosition = document.getElementById('wm-position');
+                            const wColor = document.getElementById('wm-color');
+                            if (wText) fd.append('watermark_text', wText.value || 'Fileonix');
+                            if (wOpacity) fd.append('opacity', wOpacity.value);
+                            if (wFontSize) fd.append('font_size', wFontSize.value);
+                            if (wPosition) fd.append('position', wPosition.value);
+                            if (wColor) fd.append('color', wColor.value);
+                        }
+                    } else if (tool === 'word') {
                         ep = '/convert-docx';
                         fd.delete('format'); // Use target_ext instead
                         fd.append('target_ext', d.targetFormat.toLowerCase());
@@ -522,4 +575,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnClose) btnClose.onclick = () => { if (modal) modal.hidden = true; };
     window.onclick = (e) => { if (e.target === modal) modal.hidden = true; };
+
+    // --- Watermark Panel Sliders ---
+    const wmOpacity = document.getElementById('wm-opacity');
+    const wmOpacityVal = document.getElementById('wm-opacity-val');
+    const wmFontsize = document.getElementById('wm-fontsize');
+    const wmFontsizeVal = document.getElementById('wm-fontsize-val');
+
+    if (wmOpacity && wmOpacityVal) {
+        wmOpacity.oninput = (e) => {
+            const pct = Math.round((parseInt(e.target.value) / 255) * 100);
+            wmOpacityVal.textContent = pct + '%';
+        };
+    }
+    if (wmFontsize && wmFontsizeVal) {
+        wmFontsize.oninput = (e) => {
+            wmFontsizeVal.textContent = e.target.value + 'px';
+        };
+    }
 });
