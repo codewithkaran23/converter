@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file-input');
     const mainSelectBtn = document.getElementById('main-select-btn');
@@ -7,7 +8,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileList = document.getElementById('file-list');
     const readyCount = document.getElementById('ready-count');
     const convertAllBtn = document.getElementById('convert-all-btn');
+    const downloadAllBtn = document.getElementById('download-all-btn');
     const globalFormatSelect = document.getElementById('global-format-select');
+    const downloadConfirmModal = document.getElementById('download-confirm-modal');
+    const downloadConfirmCancel = document.getElementById('download-confirm-cancel');
+    const downloadConfirmOkay = document.getElementById('download-confirm-okay');
+
+    function confirmDownloadAgain() {
+        return new Promise((resolve) => {
+            if (!downloadConfirmModal || !downloadConfirmCancel || !downloadConfirmOkay) {
+                resolve(window.confirm('You have already downloaded this file. Do you want to download it again?'));
+                return;
+            }
+
+            const close = (answer) => {
+                downloadConfirmModal.hidden = true;
+                downloadConfirmCancel.onclick = null;
+                downloadConfirmOkay.onclick = null;
+                resolve(answer);
+            };
+
+            downloadConfirmModal.hidden = false;
+            downloadConfirmCancel.onclick = () => close(false);
+            downloadConfirmOkay.onclick = () => close(true);
+            downloadConfirmOkay.focus();
+        });
+    }
     
     // Robot Mascot & Jokes (DO NOT TOUCH - USER LIKES THIS)
     const robotContainer = document.getElementById('robot-mascot');
@@ -137,6 +163,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (mainSelectBtn) mainSelectBtn.addEventListener('click', () => fileInput.click());
     if (addMoreBtn) addMoreBtn.addEventListener('click', () => fileInput.click());
+    if (dropzone) {
+        dropzone.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'INPUT' && !e.target.closest('button') && !e.target.closest('a')) {
+                fileInput.click();
+            }
+        });
+    }
 
     if (fileInput) {
         fileInput.addEventListener('change', (e) => {
@@ -181,6 +214,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
+    function safeText(value) {
+        const element = document.createElement('span');
+        element.textContent = String(value);
+        return element.innerHTML;
+    }
+
     function getActiveTool() {
         const path = window.location.pathname.toLowerCase();
         const heroTitle = document.querySelector('.hero-section h1');
@@ -195,6 +234,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function addFiles(newFiles) {
         const tool = getActiveTool();
+        if (tool === 'bgrem') {
+            const ext = newFiles[0] ? newFiles[0].name.toLowerCase().split('.').pop() : '';
+            const isValidImg = newFiles[0] && (newFiles[0].type.startsWith('image/') || ['jpg','jpeg','png','webp','gif','bmp'].includes(ext));
+            if (!isValidImg) {
+                alert("Please select a valid image file (PNG, JPG, WEBP).");
+                return;
+            }
+            
+            // Clear previous preview URLs
+            filesData.forEach(f => { if(f.previewUrl) URL.revokeObjectURL(f.previewUrl); });
+            filesData = [];
+            
+            const file = newFiles[0];
+            const previewUrl = URL.createObjectURL(file);
+            
+            filesData.push({
+                id: nextId++,
+                file: file,
+                previewUrl: previewUrl,
+                targetFormat: 'PNG',
+                quality: 80,
+                targetSizeKb: null,
+                status: 'uploading',
+                url: null,
+                newSize: null,
+                downloaded: false
+            });
+            
+            render();
+            handleBgRemoveUpload(file);
+            return;
+        }
+
         let valid = Array.from(newFiles).filter(f => {
             const ext = f.name.toLowerCase().split('.').pop();
             if (tool === 'bgrem' || tool === 'watermark') {
@@ -206,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (tool === 'pdf') {
                 return ext === 'pdf' || f.type.startsWith('image/') || ['jpg','jpeg','png','webp','gif','bmp'].includes(ext);
             }
-            return f.type.startsWith('image/') || ['jpg','jpeg','png','webp','gif','bmp', 'pdf'].includes(ext);
+            return f.type.startsWith('image/') || ['jpg','jpeg','png','webp','gif','bmp', 'pdf', 'docx', 'doc'].includes(ext);
         });
         
         if (valid.length === 0) return;
@@ -228,8 +300,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetFormat = (ext === 'pdf') ? (ps ? ps.value : 'PNG') : 'PDF';
                 if (targetFormat === 'PDF' && ext === 'pdf') targetFormat = 'PNG';
             } else {
-                targetFormat = gfs ? gfs.value : (ps ? ps.value : 'WEBP');
-                if (ext === 'pdf' && targetFormat === 'PDF') targetFormat = 'PNG';
+                if (ext === 'pdf') {
+                    targetFormat = 'DOCX';
+                } else if (ext === 'docx' || ext === 'doc') {
+                    targetFormat = 'PDF';
+                } else {
+                    targetFormat = gfs ? gfs.value : (ps ? ps.value : 'WEBP');
+                    if (ext === 'pdf' && targetFormat === 'PDF') targetFormat = 'PNG';
+                }
             }
 
             const previewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
@@ -240,6 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 previewUrl: previewUrl,
                 targetFormat: targetFormat,
                 quality: 80,
+                targetSizeKb: null,
                 status: 'ready', 
                 url: null,
                 newSize: null,
@@ -256,10 +335,120 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     }
 
+    let bgRemProcessedBlob = null;
+    let bgRemFilename = "";
+
+    function renderBgRemDropzone() {
+        if (filesData.length === 0) {
+            dropzone.innerHTML = `
+                <div class="flex flex-col items-center justify-center">
+                    <div class="w-16 h-16 rounded-full bg-[#ffedd5] dark:bg-[#ffedd5]/10 flex items-center justify-center mb-6 text-[#f97316] text-3xl">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h3 class="text-2xl font-extrabold text-[#18181b] dark:text-white mb-2">Drag & drop image</h3>
+                    <p class="text-sm text-[#71717a] dark:text-white/40 mb-8">Supports PNG, JPG, WEBP (Max 15MB)</p>
+                    <button type="button" class="btn-orange text-base font-bold px-8 py-3.5" id="main-select-btn">Browse Files</button>
+                </div>
+            `;
+            const mainBtn = document.getElementById('main-select-btn');
+            if (mainBtn) mainBtn.onclick = () => fileInput.click();
+        } else {
+            const data = filesData[0];
+            if (data.status === 'uploading') {
+                dropzone.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-8">
+                        <div class="w-12 h-12 rounded-full border-4 border-[#f97316]/20 border-t-[#f97316] animate-spin mb-4"></div>
+                        <h3 class="text-lg font-bold text-[#18181b] dark:text-white">Removing background...</h3>
+                        <p class="text-xs text-[#71717a] dark:text-white/40 mt-1">Our AI neural engine is processing your image</p>
+                    </div>
+                `;
+            } else if (data.status === 'done') {
+                dropzone.innerHTML = `
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="bg-checkered p-1.5 rounded-2xl border border-[#e4e4e7] dark:border-white/5 shadow-sm bg-white dark:bg-white/5 w-20 h-20 overflow-hidden flex items-center justify-center mb-4">
+                            <img src="${data.previewUrl}" class="w-full h-full object-cover rounded-xl select-none">
+                        </div>
+                        <h4 class="text-lg font-extrabold text-[#18181b] dark:text-white mb-1">${safeText(data.file.name)}</h4>
+                        <p class="text-xs font-bold text-[#71717a] dark:text-white/40 mb-4 flex items-center gap-1.5 justify-center">
+                            <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Uploaded successfully</span> 
+                            <span>•</span> 
+                            <span>${formatBytes(data.file.size)}</span>
+                        </p>
+                        <button type="button" class="btn-border text-xs px-5 py-2 font-bold" id="change-file-btn">Change File</button>
+                    </div>
+                `;
+                const changeBtn = document.getElementById('change-file-btn');
+                if (changeBtn) changeBtn.onclick = () => fileInput.click();
+            }
+        }
+    }
+
+    function handleBgRemoveUpload(file) {
+        bgRemFilename = file.name.split('.').slice(0, -1).join('.') + "_nobg.png";
+        
+        // Update slider original image immediately
+        const originalImg = document.querySelector('.comparison-original img');
+        if (originalImg) {
+            originalImg.src = URL.createObjectURL(file);
+        }
+        
+        const successAlert = document.getElementById('bg-success-alert');
+        if (successAlert) successAlert.style.display = 'none';
+        
+        const formData = new FormData();
+        formData.append('files', file);
+        formData.append('high_precision', document.getElementById('bg-refine-edges') ? document.getElementById('bg-refine-edges').checked.toString() : 'false');
+        
+        fetch('/remove-bg', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.error || 'Failed to process image'); });
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            bgRemProcessedBlob = blob;
+            
+            // Update slider processed image
+            const processedImg = document.querySelector('.comparison-processed img');
+            if (processedImg) {
+                processedImg.src = URL.createObjectURL(blob);
+            }
+            
+            if (filesData.length > 0) {
+                filesData[0].status = 'done';
+                filesData[0].newSize = blob.size;
+            }
+            
+            if (successAlert) successAlert.style.display = 'flex';
+            speak('SUCCESS');
+            render();
+        })
+        .catch(err => {
+            console.error(err);
+            if (filesData.length > 0) {
+                filesData[0].status = 'error';
+            }
+            speak('ERROR', err.message);
+            alert("Error removing background: " + err.message);
+            filesData = [];
+            render();
+        });
+    }
+
     function render() {
         if (!fileList || !dropzone || !fileListContainer) return;
 
         const tool = getActiveTool();
+        if (tool === 'bgrem') {
+            dropzone.hidden = false;
+            fileListContainer.hidden = true;
+            renderBgRemDropzone();
+            return;
+        }
         const isToolPage = tool !== 'image';
         const heroTitle = document.querySelector('.hero-section h1');
         const heroDesc = document.querySelector('.hero-section p');
@@ -361,6 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isToolPage) {
                 fileList.innerHTML = '';
                 if (convertAllBtn) convertAllBtn.hidden = true;
+                if (downloadAllBtn) downloadAllBtn.style.display = 'none';
                 if (readyCount) readyCount.textContent = 'No files selected';
             }
             return;
@@ -368,9 +558,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dropzone.hidden = true;
         fileListContainer.hidden = false;
-        if (convertAllBtn) convertAllBtn.hidden = false;
         
-        const count = filesData.filter(f => f.status === 'ready' || f.status === 'converting').length;
+        const doneFiles = filesData.filter(f => f.status === 'done');
+        const pendingFiles = filesData.filter(f => f.status === 'ready' || f.status === 'converting');
+
+        if (doneFiles.length > 0 && pendingFiles.length === 0) {
+            if (convertAllBtn) convertAllBtn.style.display = 'none';
+            if (downloadAllBtn) downloadAllBtn.style.display = 'flex';
+        } else {
+            if (convertAllBtn) {
+                convertAllBtn.style.display = '';
+                convertAllBtn.hidden = false;
+            }
+            if (downloadAllBtn) downloadAllBtn.style.display = 'none';
+        }
+        
+        const count = pendingFiles.length;
         if (readyCount) readyCount.textContent = `${count} file${count !== 1 ? 's' : ''} ready`;
 
         fileList.innerHTML = '';
@@ -400,17 +603,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (tool === 'pdf' && data.targetFormat === 'PDF') {
                     actionHtml = `<div class="format-container flex items-center gap-2 bg-[#1a1a1a] px-3 py-1.5 rounded-lg border border-white/10"><span class="text-[0.7rem] text-zinc-500 font-bold uppercase">TO &rarr;</span><span class="text-white font-extrabold text-xs uppercase">PDF</span></div>`;
                 } else {
+                    const fileExt = origExt.toLowerCase();
+                    let selectOptions = '';
+                    if (fileExt === 'pdf') {
+                        selectOptions = `
+                            <option value="DOCX" ${data.targetFormat==='DOCX'?'selected':''}>Word File (DOCX)</option>
+                            <option value="PNG" ${data.targetFormat==='PNG'?'selected':''}>PNG Image</option>
+                            <option value="JPEG" ${data.targetFormat==='JPEG'?'selected':''}>JPG Image</option>
+                            <option value="WEBP" ${data.targetFormat==='WEBP'?'selected':''}>WEBP Image</option>
+                        `;
+                    } else if (fileExt === 'docx' || fileExt === 'doc') {
+                        selectOptions = `
+                            <option value="PDF" ${data.targetFormat==='PDF'?'selected':''}>PDF Document</option>
+                        `;
+                    } else {
+                        selectOptions = `
+                            <option value="WEBP" ${data.targetFormat==='WEBP'?'selected':''}>WEBP</option>
+                            <option value="PNG" ${data.targetFormat==='PNG'?'selected':''}>PNG</option>
+                            <option value="JPEG" ${data.targetFormat==='JPEG'?'selected':''}>JPG</option>
+                            <option value="PDF" ${data.targetFormat==='PDF'?'selected':''}>PDF</option>
+                        `;
+                    }
                     actionHtml = `
                         <div class="format-container flex items-center gap-2 bg-[#1a1a1a] px-3 py-1.5 rounded-lg border border-white/10">
                             <span class="text-[0.7rem] text-zinc-500 font-bold uppercase">TO &rarr;</span>
                             <select class="format-select bg-transparent border-none text-white font-bold cursor-pointer outline-none text-xs">
-                                <option value="WEBP" ${data.targetFormat==='WEBP'?'selected':''}>WEBP</option>
-                                <option value="PNG" ${data.targetFormat==='PNG'?'selected':''}>PNG</option>
-                                <option value="JPEG" ${data.targetFormat==='JPEG'?'selected':''}>JPG</option>
-                                <option value="PDF" ${data.targetFormat==='PDF'?'selected':''}>PDF</option>
+                                ${selectOptions}
                             </select>
                         </div>
-                        <button class="btn-opt text-zinc-500 hover:text-white transition-colors" title="Adjust Quality"><i class="fa-solid fa-sliders"></i></button>
+                        ${['WEBP','PNG','JPEG','JPG'].includes(data.targetFormat) ? '<button class="btn-opt text-zinc-500 hover:text-white transition-colors" title="Adjust Quality"><i class="fa-solid fa-sliders"></i></button>' : ''}
                     `;
                 }
                 actionHtml += `<button class="btn-rm" style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;margin-left:10px;">&times;</button>`;
@@ -420,7 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const statusText = data.downloaded ? 'DOWNLOADED' : 'DONE';
                 actionHtml = `
                     <div class="text-[0.7rem] font-extrabold text-emerald-500 flex items-center gap-1"><i class="fa-solid fa-check"></i> ${statusText}</div>
-                    <a href="${data.url}" download="${displayName}" class="btn-dl bg-emerald-500 hover:bg-emerald-600 text-white text-[0.7rem] font-bold py-1.5 px-3 rounded-md transition-all">DOWNLOAD</a>
+                    <a href="${data.url}" download="${safeText(displayName)}" class="btn-dl bg-emerald-500 hover:bg-emerald-600 text-white text-[0.7rem] font-bold py-1.5 px-3 rounded-md transition-all">DOWNLOAD</a>
                     <button class="btn-rm text-zinc-500 hover:text-white text-xl ml-2">&times;</button>
                 `;
             } else if (data.status === 'error') {
@@ -439,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
             row.innerHTML = `
                 <div class="file-icon text-zinc-500 text-xl w-10 h-10 flex items-center justify-center bg-white/5 rounded overflow-hidden">${iconHtml}</div>
                 <div class="file-info flex-1 w-full text-center sm:text-left">
-                    <div class="file-name font-bold text-sm truncate max-w-[200px] mx-auto sm:mx-0">${displayName}</div>
+                    <div class="file-name font-bold text-sm truncate max-w-[200px] mx-auto sm:mx-0">${safeText(displayName)}</div>
                     <div class="file-meta text-xs text-zinc-500">${sizeStr}</div>
                 </div>
                 <div class="file-actions flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-end">${actionHtml}</div>
@@ -448,7 +669,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const fs = row.querySelector('.format-select');
             if (fs) fs.onchange = (e) => data.targetFormat = e.target.value;
             const db = row.querySelector('.btn-dl');
-            if (db) db.onclick = () => { data.downloaded = true; render(); };
+            if (db) {
+                db.onclick = (e) => {
+                    if (data.downloaded) {
+                        e.preventDefault();
+                        confirmDownloadAgain().then((downloadAgain) => {
+                            if (!downloadAgain) return;
+                            const tempLink = document.createElement('a');
+                            tempLink.href = data.url;
+                            tempLink.download = displayName;
+                            document.body.appendChild(tempLink);
+                            tempLink.click();
+                            setTimeout(() => document.body.removeChild(tempLink), 1000);
+                        });
+                    } else {
+                        data.downloaded = true;
+                        setTimeout(() => render(), 1000);
+                    }
+                };
+            }
             const ob = row.querySelector('.btn-opt');
             if (ob) ob.onclick = () => openOptions(data.id);
             const rb = row.querySelector('.btn-rm');
@@ -477,9 +716,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     fd.append('files', d.file);
                     fd.append('format', d.targetFormat);
                     fd.append('quality', d.quality);
+                    if (d.targetSizeKb) fd.append('target_size_kb', d.targetSizeKb);
                     
                     let ep = '/convert';
                     const tool = getActiveTool();
+                    const ext = d.file.name.toLowerCase().split('.').pop();
+                    
                     if (tool === 'bgrem') {
                         ep = '/remove-bg';
                         const hpToggle = document.getElementById('bg-high-precision');
@@ -500,20 +742,28 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (wPosition) fd.append('position', wPosition.value);
                             if (wColor) fd.append('color', wColor.value);
                         }
-                    } else if (tool === 'word') {
+                    } else if (tool === 'word' || (tool === 'image' && (ext === 'docx' || ext === 'doc' || (ext === 'pdf' && d.targetFormat === 'DOCX')))) {
                         ep = '/convert-docx';
                         fd.delete('format'); // Use target_ext instead
                         fd.append('target_ext', d.targetFormat.toLowerCase());
+                    } else if (tool === 'pdf' || (tool === 'image' && ext === 'pdf' && d.targetFormat !== 'DOCX')) {
+                        ep = '/convert-pdf';
                     }
-                    if (tool === 'pdf') ep = '/convert-pdf';
 
                     const res = await fetch(ep, { method: 'POST', body: fd });
-                    if (!res.ok) throw new Error();
+                    if (!res.ok) {
+                        const errorData = await res.json().catch(() => ({}));
+                        throw new Error(errorData.error || 'File convert nahi ho paayi. Dobara try karo.');
+                    }
                     const blob = await res.blob();
                     d.url = window.URL.createObjectURL(blob);
                     d.newSize = blob.size;
                     d.status = 'done';
-                } catch(e) { d.status = 'error'; speak('ERROR'); }
+                } catch(e) {
+                    d.status = 'error';
+                    speak('ERROR');
+                    alert(e.message);
+                }
                 render();
             }
             if (robotContainer) robotContainer.classList.remove('thinking');
@@ -525,13 +775,42 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    if (downloadAllBtn) {
+        downloadAllBtn.onclick = function() {
+            const doneFiles = filesData.filter(f => f.status === 'done');
+            doneFiles.forEach((data, index) => {
+                setTimeout(() => {
+                    const origExt = data.file.name.split('.').pop().toUpperCase();
+                    const baseName = data.file.name.split('.').slice(0, -1).join('.');
+                    const displayName = `${baseName}.${data.targetFormat.toLowerCase()}`;
+                    
+                    const tempLink = document.createElement('a');
+                    tempLink.href = data.url;
+                    tempLink.download = displayName;
+                    document.body.appendChild(tempLink);
+                    tempLink.click();
+                    setTimeout(() => {
+                        document.body.removeChild(tempLink);
+                    }, 1000);
+                    
+                    data.downloaded = true;
+                }, index * 400);
+            });
+            
+            setTimeout(() => {
+                render();
+            }, doneFiles.length * 400 + 100);
+        };
+    }
+
     render();
     resetIdleTimer();
 
     // --- MODAL LOGIC ---
     const modal = document.getElementById('options-modal');
-    const qualitySlider = document.getElementById('modal-quality-slider');
-    const qualityVal = document.getElementById('modal-quality-val');
+    const targetSizeInput = document.getElementById('modal-target-size');
+    const targetSizeVal = document.getElementById('modal-target-size-val');
+    const targetSizeNote = document.getElementById('modal-target-size-note');
     const btnSave = document.getElementById('save-modal');
     const btnApplyAll = document.getElementById('apply-all-modal');
     const btnClose = document.getElementById('close-modal');
@@ -539,24 +818,30 @@ document.addEventListener('DOMContentLoaded', () => {
     function openOptions(id) {
         currentEditingId = id;
         const data = filesData.find(f => f.id === id);
-        if (data && modal && qualitySlider && qualityVal) {
-            qualitySlider.value = data.quality;
-            qualityVal.textContent = data.quality + '%';
+        if (data && modal && targetSizeInput && targetSizeVal) {
+            const supportsTargetSize = ['JPEG', 'JPG', 'WEBP'].includes(data.targetFormat);
+            targetSizeInput.disabled = !supportsTargetSize;
+            targetSizeInput.value = data.targetSizeKb || '';
+            targetSizeVal.textContent = data.targetSizeKb ? `${data.targetSizeKb} KB` : 'Not set';
+            if (targetSizeNote) targetSizeNote.textContent = supportsTargetSize
+                ? 'JPG aur WEBP me output is size ke aas-paas rakha jayega.'
+                : 'Target size JPG aur WEBP ke liye hi available hai.';
             modal.hidden = false;
         }
     }
 
-    if (qualitySlider) {
-        qualitySlider.oninput = (e) => {
-            if (qualityVal) qualityVal.textContent = e.target.value + '%';
+    if (targetSizeInput) {
+        targetSizeInput.oninput = (e) => {
+            const size = parseInt(e.target.value);
+            if (targetSizeVal) targetSizeVal.textContent = size ? `${size} KB` : 'Not set';
         };
     }
 
     if (btnSave) {
         btnSave.onclick = () => {
             const data = filesData.find(f => f.id === currentEditingId);
-            if (data && qualitySlider) {
-                data.quality = parseInt(qualitySlider.value);
+            if (data && targetSizeInput && !targetSizeInput.disabled) {
+                data.targetSizeKb = targetSizeInput.value ? parseInt(targetSizeInput.value) : null;
             }
             if (modal) modal.hidden = true;
         };
@@ -564,12 +849,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnApplyAll) {
         btnApplyAll.onclick = () => {
-            if (qualitySlider) {
-                const q = parseInt(qualitySlider.value);
-                filesData.forEach(f => { if(f.status === 'ready') f.quality = q; });
+            if (targetSizeInput && !targetSizeInput.disabled) {
+                const size = targetSizeInput.value ? parseInt(targetSizeInput.value) : null;
+                filesData.forEach(f => {
+                    if (f.status === 'ready' && ['JPEG', 'JPG', 'WEBP'].includes(f.targetFormat)) f.targetSizeKb = size;
+                });
             }
             if (modal) modal.hidden = true;
-            speak('UPLOAD', "Quality applied to all.");
+            speak('UPLOAD', "Size applied to all.");
         };
     }
 
@@ -591,6 +878,145 @@ document.addEventListener('DOMContentLoaded', () => {
     if (wmFontsize && wmFontsizeVal) {
         wmFontsize.oninput = (e) => {
             wmFontsizeVal.textContent = e.target.value + 'px';
+        };
+    }
+
+    // --- AI BACKGROUND REMOVER INTERACTION LOGIC ---
+    // Comparison Slider Dragging
+    const sliderContainer = document.querySelector('.comparison-slider-container');
+    const sliderBar = document.querySelector('.slider-bar');
+    const processedImg = document.querySelector('.comparison-processed');
+    
+    if (sliderContainer && sliderBar && processedImg) {
+        let isDragging = false;
+        
+        function updateSlider(clientX) {
+            const rect = sliderContainer.getBoundingClientRect();
+            const posX = clientX - rect.left;
+            let pct = (posX / rect.width) * 100;
+            if (pct < 0) pct = 0;
+            if (pct > 100) pct = 100;
+            
+            sliderBar.style.left = `${pct}%`;
+            processedImg.style.clipPath = `inset(0 0 0 ${pct}%)`;
+        }
+        
+        sliderBar.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isDragging = true;
+        });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            updateSlider(e.clientX);
+        });
+        
+        // Touch support
+        sliderBar.addEventListener('touchstart', (e) => {
+            isDragging = true;
+        });
+        window.addEventListener('touchend', () => { isDragging = false; });
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging || e.touches.length === 0) return;
+            updateSlider(e.touches[0].clientX);
+        });
+    }
+
+    // Settings panel UI interactions
+    const bgFeather = document.getElementById('bg-feather');
+    const bgFeatherVal = document.getElementById('bg-feather-val');
+    if (bgFeather && bgFeatherVal) {
+        bgFeather.oninput = (e) => {
+            bgFeatherVal.textContent = e.target.value + '%';
+        };
+    }
+
+    const bgDenoise = document.getElementById('bg-denoise');
+    const bgDenoiseVal = document.getElementById('bg-denoise-val');
+    if (bgDenoise && bgDenoiseVal) {
+        bgDenoise.oninput = (e) => {
+            const val = (parseInt(e.target.value) / 100).toFixed(1);
+            bgDenoiseVal.textContent = val;
+        };
+    }
+
+    const formatButtons = document.querySelectorAll('.export-format-btn');
+    formatButtons.forEach(btn => {
+        btn.onclick = () => {
+            formatButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        };
+    });
+
+    const bgDownloadBtn = document.getElementById('bg-download-btn');
+    if (bgDownloadBtn) {
+        bgDownloadBtn.onclick = () => {
+            const activeFile = filesData[0];
+            const activeFormatBtn = document.querySelector('.export-format-btn.active');
+            const format = activeFormatBtn ? activeFormatBtn.textContent.trim().toUpperCase() : 'PNG';
+            
+            bgDownloadBtn.disabled = true;
+            const originalText = bgDownloadBtn.innerHTML;
+            bgDownloadBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i> Downloading...`;
+            
+            const triggerDownload = (fileDataBlob, originalName) => {
+                const formData = new FormData();
+                formData.append('files', fileDataBlob, originalName);
+                formData.append('high_precision', document.getElementById('bg-refine-edges') ? document.getElementById('bg-refine-edges').checked.toString() : 'false');
+                formData.append('format', format);
+                
+                fetch('/remove-bg', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to process image');
+                    return response.blob();
+                })
+                .then(blob => {
+                    const ext = format.toLowerCase() === 'jpeg' ? 'jpg' : format.toLowerCase();
+                    const filename = originalName.split('.').slice(0, -1).join('.') + `_nobg.${ext}`;
+                    
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => {
+                        URL.revokeObjectURL(url);
+                    }, 1000);
+                })
+                .catch(err => {
+                    alert("Error downloading image: " + err.message);
+                })
+                .finally(() => {
+                    bgDownloadBtn.disabled = false;
+                    bgDownloadBtn.innerHTML = originalText;
+                });
+            };
+
+            if (activeFile) {
+                triggerDownload(activeFile.file, activeFile.file.name);
+            } else {
+                fetch('/static/img/vase_original.png')
+                .then(r => r.blob())
+                .then(blob => {
+                    triggerDownload(blob, 'vase_original.png');
+                })
+                .catch(err => {
+                    const a = document.createElement('a');
+                    a.href = "/static/img/vase_processed.png";
+                    a.download = "vase_processed.png";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    bgDownloadBtn.disabled = false;
+                    bgDownloadBtn.innerHTML = originalText;
+                });
+            }
         };
     }
 });

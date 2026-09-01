@@ -6,3 +6,5 @@ pdf2docx
 PyMuPDF
 docx2pdf
 opencv-python-headless
+rembg[cpu]
+pywin32
