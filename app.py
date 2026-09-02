@@ -6,7 +6,6 @@ from werkzeug.utils import secure_filename
 from PIL import Image
 import io
 import fitz  # PyMuPDF
-from docx2pdf import convert as docx_to_pdf_conv
 from pdf2docx import Converter as pdf_to_docx_conv
 import tempfile
 import shutil
@@ -14,8 +13,10 @@ import threading
 import uuid
 if os.name == 'nt':
     import pythoncom
+    from docx2pdf import convert as docx_to_pdf_conv
 else:
     pythoncom = None
+    docx_to_pdf_conv = None
 
 
 app = Flask(__name__)
