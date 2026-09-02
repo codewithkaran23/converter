@@ -4,5 +4,4 @@ Werkzeug
 python-docx
 pdf2docx
 PyMuPDF
-docx2pdf
-pywin32; sys_platform == "win32"
+docx2pdf; sys_platform == "win32"
