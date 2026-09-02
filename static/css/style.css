@@ -106,6 +106,7 @@ body {
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--glass-border);
+    z-index: 1000 !important;
 }
 .nav-brand {
     font-size: 1.25rem;
@@ -361,7 +362,7 @@ body {
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 100;
+    z-index: 10;
 }
 .speech-bubble.active {
     opacity: 1;
@@ -1234,6 +1235,103 @@ body.light-mode .progress-bar-container {
     font-size: 0.84rem;
     line-height: 1.55;
 }
+
+/* Homepage workflow */
+.workflow-flow { max-width: 68rem; margin-right: auto; margin-left: auto; }
+.workflow-flow-heading { margin-bottom: 2.25rem; text-align: center; }
+.workflow-flow-heading p { margin: 0 0 0.65rem; color: #ff4e00; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.13em; }
+.workflow-flow-heading h2 { margin: 0; color: #18181b; font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 800; letter-spacing: -0.05em; }
+.workflow-flow-heading span { display: block; margin-top: 0.7rem; color: #71717a; font-size: 0.95rem; font-weight: 600; }
+.workflow-flow-steps { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.workflow-flow-steps::before { position: absolute; z-index: 0; top: 2.6rem; right: 16.5%; left: 16.5%; height: 1px; content: ""; background: linear-gradient(90deg, rgba(255, 78, 0, 0.18), rgba(255, 78, 0, 0.5), rgba(255, 78, 0, 0.18)); }
+.workflow-flow-step { position: relative; z-index: 1; padding: 1.6rem; border: 1px solid rgba(24, 24, 27, 0.08); border-radius: 18px; background: rgba(255, 255, 255, 0.88); box-shadow: 0 12px 28px rgba(39, 36, 64, 0.05); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.workflow-flow-step:hover { transform: translateY(-4px); box-shadow: 0 18px 32px rgba(39, 36, 64, 0.09); }
+.workflow-flow-icon { position: relative; display: grid; width: 3.25rem; height: 3.25rem; place-items: center; margin-bottom: 1.4rem; border-radius: 1rem; background: #fff0e9; color: #ff4e00; font-size: 1.2rem; }
+.workflow-flow-icon span { position: absolute; top: -0.5rem; right: -0.45rem; display: grid; width: 1.35rem; height: 1.35rem; place-items: center; border: 2px solid #fff; border-radius: 50%; background: #18181b; color: #fff; font-size: 0.55rem; font-weight: 800; }
+.workflow-flow-step h3 { margin: 0 0 0.5rem; color: #27272a; font-size: 1.1rem; font-weight: 800; letter-spacing: -0.025em; }
+.workflow-flow-step p { margin: 0; color: #71717a; font-size: 0.88rem; line-height: 1.6; }
+@media (max-width: 700px) { .workflow-flow-steps { grid-template-columns: 1fr; } .workflow-flow-steps::before { top: 4.5rem; bottom: 4.5rem; left: 1.6rem; width: 1px; height: auto; background: linear-gradient(180deg, rgba(255, 78, 0, 0.18), rgba(255, 78, 0, 0.5), rgba(255, 78, 0, 0.18)); } .workflow-flow-step { display: grid; grid-template-columns: 3.25rem 1fr; column-gap: 1.1rem; } .workflow-flow-icon { grid-row: span 2; margin: 0; } }
+
+/* Browser-only Merge PDF tool */
+.merge-pdf-panel { max-width: 58rem; margin: 0 auto; padding: clamp(1.25rem, 3vw, 2.25rem); border: 1px solid rgba(24, 24, 27, 0.08); border-radius: 24px; background: rgba(255, 255, 255, 0.78); box-shadow: 0 18px 45px rgba(39, 36, 64, 0.06); }
+.merge-dropzone { padding: 3rem 1.5rem; border: 1.5px dashed rgba(255, 78, 0, 0.32); border-radius: 18px; background: linear-gradient(135deg, #fffaf7, #fff); text-align: center; transition: 0.2s ease; }
+.merge-dropzone.dragover { border-color: #ff4e00; background: #fff3ed; transform: scale(1.01); }
+.merge-dropzone-icon { margin-bottom: 0.9rem; color: #ff4e00; font-size: 2.2rem; }
+.merge-dropzone h2 { margin: 0 0 0.4rem; color: #18181b; font-size: 1.35rem; font-weight: 800; }
+.merge-dropzone p { margin: 0 0 1.4rem; color: #71717a; font-size: 0.92rem; }
+.merge-dropzone .btn-orange, .merge-actions .btn-orange { padding: 0.7rem 1.15rem; }
+.merge-file-list { margin-top: 1rem; overflow: hidden; border: 1px solid rgba(24, 24, 27, 0.08); border-radius: 14px; }
+.merge-file-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.9rem 1rem; border-bottom: 1px solid rgba(24, 24, 27, 0.07); }
+.merge-file-item:last-child { border-bottom: 0; }
+.merge-file-item.is-dragging { opacity: 0.45; }
+.merge-file-order { width: 1.5rem; color: #ff4e00; font-size: 0.72rem; font-weight: 800; }
+.merge-file-item i { color: #ef4444; font-size: 1.1rem; }
+.merge-file-name { min-width: 0; flex: 1; overflow: hidden; color: #27272a; font-size: 0.9rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.merge-file-size { color: #71717a; font-size: 0.78rem; }
+.merge-order-controls { display: flex; gap: 0.25rem; }
+.merge-order-btn { width: 1.75rem; height: 1.75rem; border: 1px solid rgba(24, 24, 27, 0.1); border-radius: 0.4rem; background: #fff; color: #52525b; cursor: pointer; font-size: 0.72rem; }
+.merge-order-btn:disabled { cursor: not-allowed; opacity: 0.35; }
+.merge-order-btn:not(:disabled):hover { border-color: #ff4e00; color: #ff4e00; }
+.merge-remove-file { border: 0; background: transparent; color: #a1a1aa; cursor: pointer; font-size: 1.15rem; }
+.merge-remove-file:hover { color: #ef4444; }
+.merge-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.4rem; }
+.merge-actions p { margin: 0; color: #71717a; font-size: 0.8rem; font-weight: 600; }
+.merge-actions p i { margin-right: 0.3rem; color: #10b981; }
+.merge-actions .btn-orange:disabled { cursor: not-allowed; opacity: 0.55; transform: none; box-shadow: none; }
+.merge-status { min-height: 1.2rem; margin: 1rem 0 0; color: #52525b; font-size: 0.85rem; font-weight: 600; text-align: center; }
+
+/* Browser-only Image Resize & Crop tool */
+.resize-tool-panel { max-width: 70rem; margin: 0 auto; padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid rgba(24, 24, 27, 0.08); border-radius: 24px; background: rgba(255, 255, 255, 0.78); box-shadow: 0 18px 45px rgba(39, 36, 64, 0.06); }
+.resize-upload-box { padding: 4rem 1.5rem; border: 1.5px dashed rgba(255, 78, 0, 0.32); border-radius: 18px; background: linear-gradient(135deg, #fffaf7, #fff); text-align: center; }
+.resize-upload-icon { margin-bottom: 0.9rem; color: #ff4e00; font-size: 2.25rem; }
+.resize-upload-box h2 { margin: 0 0 0.4rem; color: #18181b; font-size: 1.4rem; font-weight: 800; }
+.resize-upload-box p { margin: 0 0 1.4rem; color: #71717a; font-size: 0.92rem; }
+.resize-upload-box .btn-orange { padding: 0.7rem 1.15rem; }
+.resize-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1.5rem; align-items: start; }
+.resize-canvas-wrap { height: min(70vh, 40rem); min-height: 32rem; overflow: hidden; border-radius: 16px; background: #f4f4f5; }
+.resize-canvas-wrap img { display: block; width: auto; max-width: 100%; height: 100%; max-height: 100%; margin: 0 auto; object-fit: contain; }
+.resize-canvas-wrap .cropper-container { width: 100% !important; height: 100% !important; }
+.resize-controls { padding: 0.3rem; }
+.resize-control-group { padding: 0 0 1.1rem; margin-bottom: 1.1rem; border-bottom: 1px solid rgba(24, 24, 27, 0.08); }
+.resize-label { display: block; margin-bottom: 0.65rem; color: #3f3f46; font-size: 0.76rem; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase; }
+.resize-presets, .resize-buttons { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.resize-presets button, .resize-buttons button { padding: 0.5rem 0.62rem; border: 1px solid rgba(24, 24, 27, 0.12); border-radius: 0.5rem; background: #fff; color: #52525b; cursor: pointer; font-size: 0.76rem; font-weight: 700; }
+.resize-presets button.active, .resize-presets button:hover, .resize-buttons button:hover { border-color: #ff4e00; color: #ff4e00; }
+.resize-dimensions { display: flex; align-items: end; gap: 0.4rem; }
+.resize-dimensions label { flex: 1; color: #71717a; font-size: 0.7rem; font-weight: 700; }
+.resize-dimensions input, .resize-controls select { width: 100%; box-sizing: border-box; margin-top: 0.3rem; padding: 0.55rem 0.5rem; border: 1px solid rgba(24, 24, 27, 0.12); border-radius: 0.5rem; background: #fff; color: #27272a; font: inherit; font-size: 0.85rem; }
+.resize-dimensions > span { padding-bottom: 0.55rem; color: #a1a1aa; }
+.resize-check { display: flex; align-items: center; gap: 0.45rem; margin-top: 0.7rem; color: #71717a; font-size: 0.78rem; font-weight: 600; }
+.resize-check input { accent-color: #ff4e00; }
+.resize-download-btn { width: 100%; padding: 0.78rem 1rem; }
+.resize-change-image { width: 100%; margin-top: 0.7rem; border: 0; background: transparent; color: #71717a; cursor: pointer; font-size: 0.8rem; font-weight: 700; }
+.resize-change-image:hover { color: #ff4e00; }
+.resize-status { min-height: 1.2rem; margin: 0.8rem 0 0; color: #71717a; font-size: 0.78rem; font-weight: 600; text-align: center; }
+@media (max-width: 800px) { .resize-workspace { grid-template-columns: 1fr; } .resize-canvas-wrap { height: min(52vh, 28rem); min-height: 18rem; } }
+
+/* Browser-only QR Code Generator */
+.qr-tool-panel { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: 1.5rem; max-width: 64rem; margin: 0 auto; padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid rgba(24, 24, 27, 0.08); border-radius: 24px; background: rgba(255, 255, 255, 0.78); box-shadow: 0 18px 45px rgba(39, 36, 64, 0.06); }
+.qr-form-card { display: flex; flex-direction: column; gap: 0.55rem; }
+.qr-form-card label { color: #3f3f46; font-size: 0.78rem; font-weight: 800; }
+.qr-form-card select, .qr-form-card textarea, .qr-form-card input:not([type="color"]) { width: 100%; box-sizing: border-box; padding: 0.7rem; border: 1px solid rgba(24, 24, 27, 0.12); border-radius: 0.6rem; background: #fff; color: #27272a; font: inherit; font-size: 0.9rem; }
+.qr-form-card textarea { min-height: 6rem; resize: vertical; }
+.qr-helper { margin: -0.1rem 0 0.4rem; color: #71717a; font-size: 0.75rem; line-height: 1.45; }
+.qr-style-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.7rem; margin: 0.6rem 0; }
+.qr-style-grid label { display: flex; flex-direction: column; gap: 0.35rem; }
+.qr-style-grid select { padding: 0.6rem; }
+.qr-style-grid input[type="color"] { width: 100%; height: 2.5rem; padding: 0.2rem; border: 1px solid rgba(24, 24, 27, 0.12); border-radius: 0.6rem; background: #fff; cursor: pointer; }
+.qr-form-card .btn-orange { align-self: flex-start; margin-top: 0.4rem; padding: 0.75rem 1.1rem; }
+.qr-status { min-height: 1.2rem; margin: 0; color: #71717a; font-size: 0.8rem; font-weight: 600; }
+.qr-preview-card { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 26rem; padding: 1.5rem; border-radius: 18px; background: #fafafa; }
+.qr-preview { display: grid; width: min(100%, 17rem); min-height: 17rem; place-items: center; overflow: hidden; border: 1px dashed rgba(24, 24, 27, 0.16); border-radius: 14px; background: #fff; color: #a1a1aa; text-align: center; }
+.qr-preview i { display: block; margin-bottom: 0.65rem; font-size: 2.5rem; }
+.qr-preview span { display: block; padding: 0 1rem; font-size: 0.82rem; font-weight: 600; }
+.qr-preview canvas, .qr-preview img { max-width: 100%; height: auto !important; }
+.qr-preview-card .btn-orange { width: min(100%, 17rem); margin-top: 1.25rem; padding: 0.75rem 1rem; }
+.qr-preview-card .btn-orange:disabled { cursor: not-allowed; opacity: 0.5; box-shadow: none; }
+.qr-preview-card > p { margin: 1rem 0 0; color: #71717a; font-size: 0.75rem; font-weight: 600; text-align: center; }
+.qr-preview-card > p i { color: #10b981; }
+@media (max-width: 800px) { .qr-tool-panel { grid-template-columns: 1fr; } .qr-preview-card { min-height: 20rem; } }
 @media (max-width: 800px) {
     .how-it-works-heading { align-items: flex-start; flex-direction: column; gap: 0.55rem; }
     .how-it-works-heading span { margin-left: 0; }

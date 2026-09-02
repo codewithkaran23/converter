@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fileonix | Universal File Converter</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.1.1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.1.6">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% if tool_type == 'IMAGERESIZE' %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+    {% endif %}
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -98,6 +101,8 @@
                     </p>
                     <div class="flex flex-wrap justify-center gap-3">
                         <a href="/image-converter" class="badge-pill no-underline text-sm"><i class="fa-solid fa-image text-[var(--primary-accent)]"></i> Image Converter</a>
+                        <a href="/image-resize-crop" class="badge-pill no-underline text-sm"><i class="fa-solid fa-crop-simple text-emerald-500"></i> Resize & Crop</a>
+                        <a href="/qr-code-generator" class="badge-pill no-underline text-sm"><i class="fa-solid fa-qrcode text-violet-500"></i> QR Generator</a>
                         <a href="/word-to-pdf" class="badge-pill no-underline text-sm"><i class="fa-solid fa-file-word text-blue-500"></i> Word to PDF</a>
                         <a href="/pdf-to-image" class="badge-pill no-underline text-sm"><i class="fa-solid fa-file-pdf text-red-500"></i> PDF Converter</a>
                         <a href="/watermark" class="badge-pill no-underline text-sm"><i class="fa-solid fa-stamp text-indigo-500"></i> Watermark</a>
@@ -244,6 +249,94 @@
                         </div>
                     </div>
                 </div>
+            {% elif tool_type == 'PDFMERGE' %}
+                <section class="merge-pdf-panel mb-12">
+                    <div id="merge-dropzone" class="merge-dropzone" tabindex="0">
+                        <div class="merge-dropzone-icon"><i class="fa-solid fa-file-circle-plus"></i></div>
+                        <h2>Add PDF files</h2>
+                        <p>Drop files here or choose them from your device.</p>
+                        <button type="button" id="merge-select-btn" class="btn-orange">Choose PDFs</button>
+                        <input type="file" id="merge-file-input" accept="application/pdf,.pdf" multiple hidden>
+                    </div>
+                    <div id="merge-file-list" class="merge-file-list" hidden></div>
+                    <div class="merge-actions">
+                        <p><i class="fa-solid fa-shield-halved"></i> Use the arrows to set the order. Your files stay private on your device.</p>
+                        <button type="button" id="merge-pdf-btn" class="btn-orange" disabled><i class="fa-solid fa-layer-group"></i> Merge PDFs</button>
+                    </div>
+                    <p id="merge-status" class="merge-status" aria-live="polite"></p>
+                </section>
+            {% elif tool_type == 'QRCODE' %}
+                <section class="qr-tool-panel mb-12">
+                    <div class="qr-form-card">
+                        <label for="qr-type">QR code type</label>
+                        <select id="qr-type"><option value="url">Website link</option><option value="google-review">Google Review link</option><option value="text">Plain text</option><option value="phone">Phone number</option><option value="whatsapp">WhatsApp message</option></select>
+                        <div id="qr-phone-group" hidden><label for="qr-phone">Phone number</label><input id="qr-phone" type="tel" placeholder="919876543210"></div>
+                        <label id="qr-content-label" for="qr-content">Website link</label>
+                        <textarea id="qr-content" rows="4" placeholder="https://example.com"></textarea>
+                        <p id="qr-helper" class="qr-helper">Paste any website link.</p>
+                        <div class="qr-style-grid">
+                            <label>Size<select id="qr-size"><option value="256">256 px</option><option value="512" selected>512 px</option><option value="1024">1024 px</option></select></label>
+                            <label>QR color<input id="qr-dark-color" type="color" value="#18181b"></label>
+                            <label>Background<input id="qr-light-color" type="color" value="#ffffff"></label>
+                        </div>
+                        <button type="button" id="qr-generate-btn" class="btn-orange"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate QR Code</button>
+                        <p id="qr-status" class="qr-status" aria-live="polite"></p>
+                    </div>
+                    <div class="qr-preview-card">
+                        <div id="qr-preview" class="qr-preview"><i class="fa-solid fa-qrcode"></i><span>Your QR code will appear here</span></div>
+                        <button type="button" id="qr-download-btn" class="btn-orange" disabled><i class="fa-solid fa-download"></i> Download PNG</button>
+                        <p><i class="fa-solid fa-shield-halved"></i> Generated locally on your device.</p>
+                    </div>
+                </section>
+            {% elif tool_type == 'IMAGERESIZE' %}
+                <section class="resize-tool-panel mb-12">
+                    <div id="resize-empty-state" class="resize-upload-box">
+                        <div class="resize-upload-icon"><i class="fa-solid fa-image"></i></div>
+                        <h2>Upload an image</h2>
+                        <p>Choose a JPG, PNG, WEBP, or GIF image to begin editing.</p>
+                        <button type="button" id="resize-select-btn" class="btn-orange">Choose Image</button>
+                        <input type="file" id="resize-file-input" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+                    </div>
+
+                    <div id="resize-workspace" class="resize-workspace" hidden>
+                        <div class="resize-canvas-wrap"><img id="resize-image" alt="Image ready for cropping"></div>
+                        <aside class="resize-controls">
+                            <div class="resize-control-group">
+                                <span class="resize-label">Crop preset</span>
+                                <div class="resize-presets">
+                                    <button type="button" data-aspect="NaN" class="active">Free</button>
+                                    <button type="button" data-aspect="1">1:1</button>
+                                    <button type="button" data-aspect="0.8">4:5</button>
+                                    <button type="button" data-aspect="1.7777778">16:9</button>
+                                </div>
+                            </div>
+                            <div class="resize-control-group">
+                                <span class="resize-label">Output size</span>
+                                <div class="resize-dimensions">
+                                    <label>Width<input id="resize-width" type="number" min="1" inputmode="numeric"></label>
+                                    <span>&times;</span>
+                                    <label>Height<input id="resize-height" type="number" min="1" inputmode="numeric"></label>
+                                </div>
+                                <label class="resize-check"><input id="resize-lock-ratio" type="checkbox" checked> Keep aspect ratio</label>
+                            </div>
+                            <div class="resize-control-group">
+                                <span class="resize-label">Adjust</span>
+                                <div class="resize-buttons">
+                                    <button type="button" id="resize-rotate-left"><i class="fa-solid fa-rotate-left"></i> Rotate</button>
+                                    <button type="button" id="resize-rotate-right"><i class="fa-solid fa-rotate-right"></i> Rotate</button>
+                                    <button type="button" id="resize-reset"><i class="fa-solid fa-arrow-rotate-left"></i> Reset</button>
+                                </div>
+                            </div>
+                            <div class="resize-control-group">
+                                <label class="resize-label" for="resize-output-format">Download as</label>
+                                <select id="resize-output-format"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option><option value="image/webp">WEBP</option></select>
+                            </div>
+                            <button type="button" id="resize-download-btn" class="btn-orange resize-download-btn"><i class="fa-solid fa-download"></i> Download Image</button>
+                            <button type="button" id="resize-change-image" class="resize-change-image">Choose another image</button>
+                            <p id="resize-status" class="resize-status" aria-live="polite"></p>
+                        </aside>
+                    </div>
+                </section>
             {% elif tool_type == 'IMG' %}
                 <!-- Image Converter Specific Dropzone -->
                 <div class="dropzone image-converter-dropzone p-8 md:py-16 text-center cursor-pointer mb-8" id="dropzone">
@@ -342,6 +435,20 @@
                         <p>Batch convert formats like WEBP, PNG, and HEIC with zero quality loss.</p>
                         <div class="arrow-hint">Launch Tool <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem;"></i></div>
                     </a>
+
+                    <a href="/image-resize-crop" class="tool-card hover:no-underline">
+                        <div class="icon-box icon-box-emerald"><i class="fa-solid fa-crop-simple"></i></div>
+                        <h3>Image Resize &amp; Crop</h3>
+                        <p>Crop, resize, rotate, and export images directly in your browser.</p>
+                        <div class="arrow-hint">Launch Tool <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem;"></i></div>
+                    </a>
+
+                    <a href="/qr-code-generator" class="tool-card hover:no-underline">
+                        <div class="icon-box icon-box-indigo"><i class="fa-solid fa-qrcode"></i></div>
+                        <h3>QR Code Generator</h3>
+                        <p>Create and download QR codes for links, text, phone numbers, and WhatsApp.</p>
+                        <div class="arrow-hint">Launch Tool <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem;"></i></div>
+                    </a>
                     
                     <a href="/word-to-pdf" class="tool-card hover:no-underline">
                         <div class="icon-box icon-box-purple"><i class="fa-solid fa-file-word"></i></div>
@@ -354,6 +461,13 @@
                         <div class="icon-box icon-box-red"><i class="fa-solid fa-file-pdf"></i></div>
                         <h3>PDF Magic</h3>
                         <p>Merge, split, and compress PDFs with enterprise-grade precision.</p>
+                        <div class="arrow-hint">Launch Tool <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem;"></i></div>
+                    </a>
+
+                    <a href="/merge-pdf" class="tool-card hover:no-underline">
+                        <div class="icon-box icon-box-purple"><i class="fa-solid fa-object-group"></i></div>
+                        <h3>Merge PDF</h3>
+                        <p>Combine multiple PDF files into one document directly in your browser.</p>
                         <div class="arrow-hint">Launch Tool <i class="fa-solid fa-arrow-right" style="font-size: 0.8rem;"></i></div>
                     </a>
  
@@ -393,33 +507,27 @@
             </section>
  
             <!-- Section 3: Simple guide -->
-            <section class="how-it-works w-full mb-16">
-                <div class="how-it-works-heading">
+            <section class="workflow-flow w-full mb-16">
+                <div class="workflow-flow-heading">
                     <p>HOW IT WORKS</p>
-                    <h2>Convert your file in three steps.</h2>
-                    <span>No account needed. Your file stays private.</span>
+                    <h2>From upload to download.</h2>
+                    <span>Simple, private file tools that work in a few clicks.</span>
                 </div>
-                <div class="how-it-works-steps">
-                    <article>
-                        <span class="how-it-works-number">01</span>
-                        <div>
-                            <h3>Pick a tool</h3>
-                            <p>Choose image, PDF, document, or watermark conversion.</p>
-                        </div>
+                <div class="workflow-flow-steps">
+                    <article class="workflow-flow-step">
+                        <div class="workflow-flow-icon"><span>01</span><i class="fa-solid fa-compass"></i></div>
+                        <h3>Choose a tool</h3>
+                        <p>Pick the tool that matches the file task you need to complete.</p>
                     </article>
-                    <article>
-                        <span class="how-it-works-number">02</span>
-                        <div>
-                            <h3>Upload your file</h3>
-                            <p>Drop a file, then select the output format you need.</p>
-                        </div>
+                    <article class="workflow-flow-step">
+                        <div class="workflow-flow-icon"><span>02</span><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                        <h3>Add your file</h3>
+                        <p>Upload your file, then choose the format or settings you want.</p>
                     </article>
-                    <article>
-                        <span class="how-it-works-number">03</span>
-                        <div>
-                            <h3>Download it</h3>
-                            <p>Save your converted file as soon as it is ready.</p>
-                        </div>
+                    <article class="workflow-flow-step">
+                        <div class="workflow-flow-icon"><span>03</span><i class="fa-solid fa-file-arrow-down"></i></div>
+                        <h3>Save the result</h3>
+                        <p>Download your finished file as soon as processing is complete.</p>
                     </article>
                 </div>
             </section>
@@ -482,5 +590,17 @@
     </button>
 
     <script src="{{ url_for('static', filename='js/script.js') }}?v=1.1.2"></script>
+    {% if tool_type == 'PDFMERGE' %}
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="{{ url_for('static', filename='js/merge-pdf.js') }}?v=1.0.2"></script>
+    {% endif %}
+    {% if tool_type == 'IMAGERESIZE' %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+    <script src="{{ url_for('static', filename='js/image-resize-crop.js') }}?v=1.0.0"></script>
+    {% endif %}
+    {% if tool_type == 'QRCODE' %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="{{ url_for('static', filename='js/qr-code-generator.js') }}?v=1.0.1"></script>
+    {% endif %}
 </body>
 </html>

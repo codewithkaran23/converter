@@ -123,6 +123,10 @@ def index():
 def image_converter_page():
     return render_template('index.html', tool_title="Image Converter", tool_desc="Transform your images instantly with precision quality. Support for PNG, JPG, WEBP, and more, all processed with lightning-fast speed.", tool_type="IMG", accept="image/*")
 
+@app.route('/image-resize-crop')
+def image_resize_crop_page():
+    return render_template('index.html', tool_title="Image Resize & Crop", tool_desc="Crop, resize, and rotate your image with precise controls. Everything stays on your device.", tool_type="IMAGERESIZE")
+
 @app.route('/word-to-pdf')
 def word_to_pdf_page():
     return render_template('index.html', tool_title="Document Converter", tool_desc="Seamlessly convert between Word and PDF formats. Our professional-grade engine preserves your formatting, fonts, and layout with absolute accuracy.", tool_type="DOC", accept=".docx,.pdf")
@@ -130,6 +134,14 @@ def word_to_pdf_page():
 @app.route('/pdf-to-image')
 def pdf_to_img_page():
     return render_template('index.html', tool_title="PDF Converter", tool_desc="Convert between PDF and Images instantly with high quality.", tool_type="PDF", accept=".pdf,image/*")
+
+@app.route('/merge-pdf')
+def merge_pdf_page():
+    return render_template('index.html', tool_title="Merge PDF", tool_desc="Combine multiple PDF files into one document. Your files stay in your browser and are never uploaded.", tool_type="PDFMERGE")
+
+@app.route('/qr-code-generator')
+def qr_code_generator_page():
+    return render_template('index.html', tool_title="QR Code Generator", tool_desc="Create a QR code for links, text, phone numbers, or WhatsApp messages. Everything is generated in your browser.", tool_type="QRCODE")
 
 @app.route('/convert', methods=['POST'])
 def convert_image():
