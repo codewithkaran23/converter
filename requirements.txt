@@ -7,4 +7,4 @@ PyMuPDF
 docx2pdf
 opencv-python-headless
 rembg[cpu]
-pywin32
+pywin32; sys_platform == "win32"
